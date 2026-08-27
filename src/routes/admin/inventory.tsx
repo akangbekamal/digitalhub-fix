@@ -343,9 +343,10 @@ function Page() {
 
     queryFn: async () => {
       return await getDigitalInventoryAdminData({
-        status: statusFilter === "all" ? undefined : statusFilter,
+        data: { status: statusFilter === "all" ? undefined : statusFilter },
       });
     },
+
   });
 
   const products = (query.data?.products ?? []) as Product[];
@@ -430,16 +431,19 @@ function Page() {
 
     try {
       await saveDigitalInventory({
-        ...draft,
-        quantity: Number(draft.quantity || 1),
-        supplier_cost: draft.supplier_cost
-          ? Number(draft.supplier_cost)
-          : null,
-        selling_price: draft.selling_price
-          ? Number(draft.selling_price)
-          : null,
-        discount: draft.discount ? Number(draft.discount) : 0,
+        data: {
+          ...draft,
+          quantity: Number(draft.quantity || 1),
+          supplier_cost: draft.supplier_cost
+            ? Number(draft.supplier_cost)
+            : null,
+          selling_price: draft.selling_price
+            ? Number(draft.selling_price)
+            : null,
+          discount: draft.discount ? Number(draft.discount) : 0,
+        },
       });
+
 
       toast.success(
         draft.id
@@ -551,7 +555,7 @@ function Page() {
 
     try {
       await deleteDigitalInventory({
-        inventoryId: item.id,
+        data: { inventoryId: item.id },
       });
 
       toast.success("Inventory item deleted.");

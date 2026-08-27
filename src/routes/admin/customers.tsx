@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ErrorState, LoadingState } from "@/components/StateBlocks";
 import { adminCustomersQuery } from "@/lib/admin-data";
 import { shortDate } from "@/lib/format";
-import { setCustomerBan, setUserRole } from "@/lib/admin.functions";
+import { setCustomerStatus, setUserRole } from "@/lib/admin.functions";
 import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/admin/customers")({

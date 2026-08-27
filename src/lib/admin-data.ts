@@ -146,11 +146,6 @@ export const adminCustomersQuery = (statusFilter: "all" | CustomerStatus = "all"
 
 
 
-
-      return Array.from(customers.values());
-    },
-  });
-
 export const adminTicketsQuery = () =>
   queryOptions({
     queryKey: ["admin-tickets"],

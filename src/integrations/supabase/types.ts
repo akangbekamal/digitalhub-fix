@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -247,6 +247,255 @@ export type Database = {
         }
         Relationships: []
       }
+      digital_deliveries: {
+        Row: {
+          created_at: string
+          customer_email: string
+          delivery_status: string
+          error_message: string | null
+          id: string
+          inventory_id: string
+          order_id: string | null
+          product_name: string
+          sent_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_email: string
+          delivery_status?: string
+          error_message?: string | null
+          id?: string
+          inventory_id: string
+          order_id?: string | null
+          product_name: string
+          sent_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string
+          delivery_status?: string
+          error_message?: string | null
+          id?: string
+          inventory_id?: string
+          order_id?: string | null
+          product_name?: string
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_deliveries_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "digital_inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_deliveries_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      digital_inventory: {
+        Row: {
+          account_email: string | null
+          account_notes: string | null
+          account_password: string | null
+          account_type: string | null
+          account_username: string | null
+          activation_url: string | null
+          country_region: string | null
+          created_at: string
+          customer_delivery_notes: string | null
+          customer_email: string | null
+          customer_id: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          date_sold: string | null
+          delivery_status: string | null
+          description: string | null
+          discount: number | null
+          download_url: string | null
+          duration: string | null
+          email_access_url: string | null
+          expiry_date: string | null
+          final_selling_price: number | null
+          id: string
+          inventory_id: string | null
+          login_url: string | null
+          notes: string | null
+          order_id: string | null
+          order_item_id: string | null
+          payment_status: string | null
+          plan_package: string | null
+          product_category: string | null
+          product_id: string | null
+          product_name: string
+          product_sku: string | null
+          product_type: string
+          profit: number | null
+          purchase_date: string | null
+          purchase_reference: string | null
+          qr_code: string | null
+          quantity: number | null
+          recovery_info: string | null
+          renewal_date: string | null
+          replacement_eligible: boolean | null
+          selling_price: number | null
+          special_instructions: string | null
+          staff_notes: string | null
+          start_date: string | null
+          status: string
+          subscription_type: string | null
+          supplier_cost: number | null
+          supplier_id: string | null
+          supplier_notes: string | null
+          two_fa_info: string | null
+          updated_at: string
+          warranty_expiry_date: string | null
+          warranty_period: string | null
+          warranty_start_date: string | null
+          warranty_status: string | null
+        }
+        Insert: {
+          account_email?: string | null
+          account_notes?: string | null
+          account_password?: string | null
+          account_type?: string | null
+          account_username?: string | null
+          activation_url?: string | null
+          country_region?: string | null
+          created_at?: string
+          customer_delivery_notes?: string | null
+          customer_email?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          date_sold?: string | null
+          delivery_status?: string | null
+          description?: string | null
+          discount?: number | null
+          download_url?: string | null
+          duration?: string | null
+          email_access_url?: string | null
+          expiry_date?: string | null
+          final_selling_price?: number | null
+          id?: string
+          inventory_id?: string | null
+          login_url?: string | null
+          notes?: string | null
+          order_id?: string | null
+          order_item_id?: string | null
+          payment_status?: string | null
+          plan_package?: string | null
+          product_category?: string | null
+          product_id?: string | null
+          product_name: string
+          product_sku?: string | null
+          product_type: string
+          profit?: number | null
+          purchase_date?: string | null
+          purchase_reference?: string | null
+          qr_code?: string | null
+          quantity?: number | null
+          recovery_info?: string | null
+          renewal_date?: string | null
+          replacement_eligible?: boolean | null
+          selling_price?: number | null
+          special_instructions?: string | null
+          staff_notes?: string | null
+          start_date?: string | null
+          status?: string
+          subscription_type?: string | null
+          supplier_cost?: number | null
+          supplier_id?: string | null
+          supplier_notes?: string | null
+          two_fa_info?: string | null
+          updated_at?: string
+          warranty_expiry_date?: string | null
+          warranty_period?: string | null
+          warranty_start_date?: string | null
+          warranty_status?: string | null
+        }
+        Update: {
+          account_email?: string | null
+          account_notes?: string | null
+          account_password?: string | null
+          account_type?: string | null
+          account_username?: string | null
+          activation_url?: string | null
+          country_region?: string | null
+          created_at?: string
+          customer_delivery_notes?: string | null
+          customer_email?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          date_sold?: string | null
+          delivery_status?: string | null
+          description?: string | null
+          discount?: number | null
+          download_url?: string | null
+          duration?: string | null
+          email_access_url?: string | null
+          expiry_date?: string | null
+          final_selling_price?: number | null
+          id?: string
+          inventory_id?: string | null
+          login_url?: string | null
+          notes?: string | null
+          order_id?: string | null
+          order_item_id?: string | null
+          payment_status?: string | null
+          plan_package?: string | null
+          product_category?: string | null
+          product_id?: string | null
+          product_name?: string
+          product_sku?: string | null
+          product_type?: string
+          profit?: number | null
+          purchase_date?: string | null
+          purchase_reference?: string | null
+          qr_code?: string | null
+          quantity?: number | null
+          recovery_info?: string | null
+          renewal_date?: string | null
+          replacement_eligible?: boolean | null
+          selling_price?: number | null
+          special_instructions?: string | null
+          staff_notes?: string | null
+          start_date?: string | null
+          status?: string
+          subscription_type?: string | null
+          supplier_cost?: number | null
+          supplier_id?: string | null
+          supplier_notes?: string | null
+          two_fa_info?: string | null
+          updated_at?: string
+          warranty_expiry_date?: string | null
+          warranty_period?: string | null
+          warranty_start_date?: string | null
+          warranty_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_inventory_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_inventory_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       downloads: {
         Row: {
           created_at: string
@@ -328,6 +577,44 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_access_links: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_id: string
+          link_name: string
+          link_type: string
+          sort_order: number
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_id: string
+          link_name: string
+          link_type?: string
+          sort_order?: number
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_id?: string
+          link_name?: string
+          link_type?: string
+          sort_order?: number
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_access_links_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "digital_inventory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_logs: {
         Row: {
           adjustment: number
@@ -369,6 +656,137 @@ export type Database = {
           },
         ]
       }
+      inventory_purchases: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_id: string
+          notes: string | null
+          purchase_date: string
+          purchase_reference: string | null
+          supplier_cost: number
+          supplier_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_id: string
+          notes?: string | null
+          purchase_date?: string
+          purchase_reference?: string | null
+          supplier_cost?: number
+          supplier_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_id?: string
+          notes?: string | null
+          purchase_date?: string
+          purchase_reference?: string | null
+          supplier_cost?: number
+          supplier_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_purchases_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "digital_inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_purchases_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_suppliers: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          supplier_contact: string | null
+          supplier_id: string | null
+          supplier_name: string
+          supplier_notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          supplier_contact?: string | null
+          supplier_id?: string | null
+          supplier_name: string
+          supplier_notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          supplier_contact?: string | null
+          supplier_id?: string | null
+          supplier_name?: string
+          supplier_notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      inventory_warranties: {
+        Row: {
+          claim_reason: string | null
+          created_at: string
+          id: string
+          inventory_id: string
+          replacement_eligible: boolean
+          resolution: string | null
+          status: string
+          updated_at: string
+          warranty_expiry_date: string | null
+          warranty_period: string | null
+          warranty_start_date: string | null
+        }
+        Insert: {
+          claim_reason?: string | null
+          created_at?: string
+          id?: string
+          inventory_id: string
+          replacement_eligible?: boolean
+          resolution?: string | null
+          status?: string
+          updated_at?: string
+          warranty_expiry_date?: string | null
+          warranty_period?: string | null
+          warranty_start_date?: string | null
+        }
+        Update: {
+          claim_reason?: string | null
+          created_at?: string
+          id?: string
+          inventory_id?: string
+          replacement_eligible?: boolean
+          resolution?: string | null
+          status?: string
+          updated_at?: string
+          warranty_expiry_date?: string | null
+          warranty_period?: string | null
+          warranty_start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_warranties_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "digital_inventory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -405,6 +823,7 @@ export type Database = {
       order_items: {
         Row: {
           id: string
+          inventory_id: string | null
           line_total: number
           order_id: string
           product_id: string | null
@@ -414,15 +833,17 @@ export type Database = {
         }
         Insert: {
           id?: string
+          inventory_id?: string | null
           line_total: number
           order_id: string
           product_id?: string | null
           product_name: string
-          quantity: number
+          quantity?: number
           unit_price: number
         }
         Update: {
           id?: string
+          inventory_id?: string | null
           line_total?: number
           order_id?: string
           product_id?: string | null
@@ -431,6 +852,13 @@ export type Database = {
           unit_price?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "order_items_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "digital_inventory"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "order_items_order_id_fkey"
             columns: ["order_id"]
@@ -667,7 +1095,7 @@ export type Database = {
           is_active?: boolean
           is_featured?: boolean
           name: string
-          price: number
+          price?: number
           product_type?: string
           rating_avg?: number
           rating_count?: number
@@ -718,6 +1146,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: string
           admin_note: string | null
           avatar_url: string | null
           created_at: string
@@ -731,6 +1160,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_status?: string
           admin_note?: string | null
           avatar_url?: string | null
           created_at?: string
@@ -744,6 +1174,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_status?: string
           admin_note?: string | null
           avatar_url?: string | null
           created_at?: string
@@ -756,15 +1187,7 @@ export type Database = {
           referred_by?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_referred_by_fkey"
-            columns: ["referred_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       referrals: {
         Row: {
@@ -1041,20 +1464,20 @@ export type Database = {
       user_roles: {
         Row: {
           created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
+          id: number
+          role: string
           user_id: string
         }
         Insert: {
           created_at?: string
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
+          id?: number
+          role?: string
           user_id: string
         }
         Update: {
           created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
+          id?: number
+          role?: string
           user_id?: string
         }
         Relationships: []
@@ -1064,6 +1487,40 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_my_digital_deliveries: {
+        Args: never
+        Returns: {
+          account_email: string
+          account_password: string
+          account_type: string
+          account_username: string
+          activation_url: string
+          country_region: string
+          created_at: string
+          delivered_at: string
+          delivery_id: string
+          delivery_status: string
+          download_url: string
+          duration: string
+          email_access_url: string
+          expiry_date: string
+          inventory_id: string
+          login_url: string
+          order_id: string
+          plan_package: string
+          product_name: string
+          qr_code: string
+          recovery_info: string
+          renewal_date: string
+          start_date: string
+          subscription_type: string
+          two_fa_info: string
+          warranty_expiry_date: string
+          warranty_period: string
+          warranty_start_date: string
+          warranty_status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1071,7 +1528,18 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_staff: { Args: { _user_id: string }; Returns: boolean }
+      is_staff:
+        | { Args: never; Returns: boolean }
+        | { Args: { _user_id: string }; Returns: boolean }
+      release_digital_inventory: {
+        Args: { p_order_id: string }
+        Returns: number
+      }
+      reserve_digital_inventory: {
+        Args: { p_inventory_id: string; p_order_id: string }
+        Returns: boolean
+      }
+      update_expired_inventory_warranties: { Args: never; Returns: number }
     }
     Enums: {
       app_role:
