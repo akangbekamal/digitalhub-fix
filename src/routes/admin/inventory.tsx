@@ -343,9 +343,10 @@ function Page() {
 
     queryFn: async () => {
       return await getDigitalInventoryAdminData({
-        status: statusFilter === "all" ? undefined : statusFilter,
+        data: { status: statusFilter === "all" ? undefined : statusFilter },
       });
     },
+
   });
 
   const products = (query.data?.products ?? []) as Product[];
