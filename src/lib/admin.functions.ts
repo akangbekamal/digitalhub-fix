@@ -609,11 +609,10 @@ export const reserveDigitalInventoryForOrder = createServerFn({ method: "POST" }
   .handler(async ({ data, context }) => {
     await requireStaff(context);
 
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
-
-    const { data: reserved, error } = await (supabaseAdmin.rpc as unknown as (
+    // The SQL function guards on auth.uid(), so it must be called as the
+    // signed-in staff user. The service-role client has no auth.uid() and
+    // would always fail with "Staff access required".
+    const { data: reserved, error } = await (context.supabase.rpc as unknown as (
       fn: string,
       args: Record<string, unknown>,
     ) => Promise<{ data: unknown; error: { message: string } | null }>)(
@@ -623,6 +622,7 @@ export const reserveDigitalInventoryForOrder = createServerFn({ method: "POST" }
         p_order_id: data.orderId,
       },
     );
+
 
     if (error) {
       throw new Error(error.message);
