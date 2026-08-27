@@ -555,7 +555,7 @@ function Page() {
 
     try {
       await deleteDigitalInventory({
-        inventoryId: item.id,
+        data: { inventoryId: item.id },
       });
 
       toast.success("Inventory item deleted.");
