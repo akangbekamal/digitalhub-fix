@@ -13,23 +13,52 @@ async function requireStaff(context: { supabase: { rpc: Function }; userId: stri
 /** Real dashboard statistics straight from the database. */
 export const getAdminStats = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        /** ISO dates (inclusive) narrowing the revenue/orders figures. */
+        from: z.string().optional(),
+        to: z.string().optional(),
+      })
+      .parse(data ?? {}),
+  )
+  .handler(async ({ data, context }) => {
     await requireStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const [orders, customers, products, tickets, reviews, refunds, downloads] = await Promise.all([
-      supabaseAdmin.from("orders").select("id, total, status, payment_status, created_at"),
-      supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
-      supabaseAdmin.from("products").select("id, name, stock, unlimited_stock, is_active, sold_count"),
+    const [orders, customers, products, tickets, reviews, refunds, downloads, items] = await Promise.all([
+      supabaseAdmin
+        .from("orders")
+        .select("id, order_number, customer_name, customer_email, total, status, payment_status, created_at")
+        .order("created_at", { ascending: false }),
+      supabaseAdmin.from("profiles").select("id, created_at"),
+      supabaseAdmin.from("products").select("id, name, stock, unlimited_stock, is_active, sold_count, price"),
       supabaseAdmin.from("support_tickets").select("id, status"),
       supabaseAdmin.from("reviews").select("id, status"),
       supabaseAdmin.from("refunds").select("id, status, amount"),
       supabaseAdmin.from("downloads").select("id, download_count"),
+      supabaseAdmin.from("order_items").select("order_id, product_name, quantity, line_total"),
     ]);
 
     const orderRows = orders.data ?? [];
     const paid = orderRows.filter((o) => o.payment_status === "verified");
     const revenue = paid.reduce((s, o) => s + Number(o.total), 0);
+
+    const fromTs = data.from ? new Date(`${data.from}T00:00:00.000Z`).getTime() : null;
+    const toTs = data.to ? new Date(`${data.to}T23:59:59.999Z`).getTime() : null;
+    const inRange = (iso: string) => {
+      const ts = new Date(iso).getTime();
+      return (fromTs === null || ts >= fromTs) && (toTs === null || ts <= toTs);
+    };
+    const rangeOrders = orderRows.filter((o) => inRange(o.created_at));
+    const rangePaid = rangeOrders.filter((o) => o.payment_status === "verified");
+    const rangeRevenue = rangePaid.reduce((s, o) => s + Number(o.total), 0);
+
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const todayOrders = orderRows.filter((o) => o.created_at.slice(0, 10) === todayKey);
+    const todayRevenue = todayOrders
+      .filter((o) => o.payment_status === "verified")
+      .reduce((s, o) => s + Number(o.total), 0);
 
     const daily: Record<string, number> = {};
     for (const o of paid) {
@@ -41,21 +70,65 @@ export const getAdminStats = createServerFn({ method: "POST" })
       return { date: d, revenue: Number((daily[d] ?? 0).toFixed(2)) };
     });
 
+    // Revenue over the selected range, day by day (real verified payments only).
+    const rangeDaily: Record<string, number> = {};
+    for (const o of rangePaid) {
+      const key = new Date(o.created_at).toISOString().slice(0, 10);
+      rangeDaily[key] = (rangeDaily[key] ?? 0) + Number(o.total);
+    }
+    const rangeSeries = Object.entries(rangeDaily)
+      .map(([date, value]) => ({ date, revenue: Number(value.toFixed(2)) }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
     const productRows = products.data ?? [];
+    const customerRows = customers.data ?? [];
+
+    // Revenue by product, from the real order items of paid orders.
+    const paidIds = new Set(rangePaid.map((o) => o.id));
+    const byProduct: Record<string, { revenue: number; units: number }> = {};
+    for (const it of items.data ?? []) {
+      if (!paidIds.has(it.order_id)) continue;
+      const agg = byProduct[it.product_name] ?? { revenue: 0, units: 0 };
+      agg.revenue += Number(it.line_total);
+      agg.units += Number(it.quantity);
+      byProduct[it.product_name] = agg;
+    }
+    const productRevenue = Object.entries(byProduct)
+      .map(([name, v]) => ({ name, revenue: Number(v.revenue.toFixed(2)), units: v.units }))
+      .sort((a, b) => b.revenue - a.revenue);
+
+    const customerGrowth = (() => {
+      const map: Record<string, number> = {};
+      for (const c of customerRows) {
+        const key = String(c.created_at).slice(0, 7);
+        map[key] = (map[key] ?? 0) + 1;
+      }
+      return Object.entries(map)
+        .map(([month, count]) => ({ month, count }))
+        .sort((a, b) => a.month.localeCompare(b.month))
+        .slice(-12);
+    })();
+
+    const lowStock = productRows
+      .filter((p) => !p.unlimited_stock && p.stock <= 5)
+      .map((p) => ({ id: p.id, name: p.name, stock: p.stock }));
 
     return {
       revenue: Number(revenue.toFixed(2)),
       avgOrderValue: paid.length ? Number((revenue / paid.length).toFixed(2)) : 0,
       totalOrders: orderRows.length,
       pendingPayments: orderRows.filter((o) => ["pending", "submitted"].includes(o.payment_status)).length,
+      failedPayments: orderRows.filter((o) => ["failed", "rejected"].includes(o.payment_status)).length,
+      pendingOrders: orderRows.filter((o) => ["pending", "processing", "paid"].includes(o.status)).length,
       completedOrders: orderRows.filter((o) => o.status === "completed").length,
       cancelledOrders: orderRows.filter((o) => o.status === "cancelled").length,
-      customers: customers.count ?? 0,
+      refundedOrders: orderRows.filter((o) => o.status === "refunded").length,
+      todayRevenue: Number(todayRevenue.toFixed(2)),
+      todayOrders: todayOrders.length,
+      customers: customerRows.length,
       products: productRows.length,
       activeProducts: productRows.filter((p) => p.is_active).length,
-      lowStock: productRows
-        .filter((p) => !p.unlimited_stock && p.stock <= 5)
-        .map((p) => ({ id: p.id, name: p.name, stock: p.stock })),
+      lowStock,
       openTickets: (tickets.data ?? []).filter((t) => !["resolved", "closed"].includes(t.status)).length,
       totalTickets: (tickets.data ?? []).length,
       pendingReviews: (reviews.data ?? []).filter((r) => r.status === "pending").length,
@@ -69,6 +142,49 @@ export const getAdminStats = createServerFn({ method: "POST" })
       ),
       downloadCount: (downloads.data ?? []).reduce((s, d) => s + d.download_count, 0),
       revenueSeries: last30,
+      // Selected-date-range figures.
+      range: {
+        revenue: Number(rangeRevenue.toFixed(2)),
+        orders: rangeOrders.length,
+        avgOrderValue: rangePaid.length ? Number((rangeRevenue / rangePaid.length).toFixed(2)) : 0,
+        completed: rangeOrders.filter((o) => o.status === "completed").length,
+        cancelled: rangeOrders.filter((o) => o.status === "cancelled").length,
+        refunded: rangeOrders.filter((o) => o.status === "refunded").length,
+        paymentsVerified: rangeOrders.filter((o) => o.payment_status === "verified").length,
+        paymentsFailed: rangeOrders.filter((o) => ["failed", "rejected"].includes(o.payment_status)).length,
+        series: rangeSeries,
+        statusBreakdown: Object.entries(
+          rangeOrders.reduce<Record<string, number>>((acc, o) => {
+            acc[o.status] = (acc[o.status] ?? 0) + 1;
+            return acc;
+          }, {}),
+        ).map(([status, count]) => ({ status, count })),
+        productRevenue,
+      },
+      customerGrowth,
+      recentOrders: orderRows.slice(0, 10).map((o) => ({
+        id: o.id,
+        order_number: o.order_number,
+        customer_name: o.customer_name,
+        total: Number(o.total),
+        status: o.status,
+        payment_status: o.payment_status,
+        created_at: o.created_at,
+        products:
+          (items.data ?? [])
+            .filter((i) => i.order_id === o.id)
+            .map((i) => i.product_name)
+            .join(", ") || "—",
+      })),
+      pendingActions: {
+        paymentsToVerify: orderRows.filter((o) => o.payment_status === "submitted").length,
+        ordersToFulfil: orderRows.filter((o) => o.payment_status === "verified" && o.status !== "completed" && o.status !== "cancelled" && o.status !== "refunded").length,
+        failedPayments: orderRows.filter((o) => ["failed", "rejected"].includes(o.payment_status)).length,
+        lowStock: lowStock.length,
+        unansweredTickets: (tickets.data ?? []).filter((t) => !["resolved", "closed"].includes(t.status)).length,
+        pendingReviews: (reviews.data ?? []).filter((r) => r.status === "pending").length,
+        refundRequests: (refunds.data ?? []).filter((r) => r.status === "requested").length,
+      },
       statusBreakdown: Object.entries(
         orderRows.reduce<Record<string, number>>((acc, o) => {
           acc[o.status] = (acc[o.status] ?? 0) + 1;
@@ -77,6 +193,11 @@ export const getAdminStats = createServerFn({ method: "POST" })
       ).map(([status, count]) => ({ status, count })),
       topProducts: [...productRows]
         .sort((a, b) => b.sold_count - a.sold_count)
+        .slice(0, 8)
+        .map((p) => ({ name: p.name, sold: p.sold_count })),
+      lowestProducts: [...productRows]
+        .filter((p) => p.is_active)
+        .sort((a, b) => a.sold_count - b.sold_count)
         .slice(0, 8)
         .map((p) => ({ name: p.name, sold: p.sold_count })),
     };
