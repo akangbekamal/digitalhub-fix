@@ -202,6 +202,8 @@ export async function emailAdminOrderAlert(order: {
 }): Promise<{ ok: boolean; error?: string }> {
   const settings = await getAdminNotifySettings();
   if (!settings.email_enabled) return { ok: false, error: "Email order notifications are disabled." };
+  if (!(await automationEnabled("new_order")))
+    return { ok: false, error: "The new-order automation rule is disabled." };
   if (!settings.email_address) return { ok: false, error: "No admin notification email configured." };
 
   const when = new Date().toLocaleString("en-GB", { timeZone: "Africa/Accra" });
@@ -225,9 +227,15 @@ export async function emailAdminOrderAlert(order: {
 
   return sendBrevoEmail({
     to: settings.email_address,
-    subject: `New DigitalHubGH Order — #${order.orderNumber}`,
+    subject: `🔔 New DigitalHubGH Order — #${order.orderNumber}`,
     html,
     text,
+    log: {
+      message_type: "admin_new_order",
+      template_key: "new_order",
+      source: "automated",
+      dedupe_key: `admin_new_order:${order.orderNumber}`,
+    },
   });
 }
 
