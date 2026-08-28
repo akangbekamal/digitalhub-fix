@@ -884,6 +884,15 @@ export const sendDigitalDeliveryEmail = createServerFn({ method: "POST" })
       },
     );
 
+    const { logMessage } = await import("./notify.server");
+    const deliveryLogMeta = {
+      message_type: "digital_delivered",
+      template_key: "digital_delivered",
+      source: "automated" as const,
+      order_id: (delivery.order_id as string | null) ?? null,
+      dedupe_key: `digital_delivered:${data.deliveryId}`,
+    };
+
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
 
@@ -893,10 +902,25 @@ export const sendDigitalDeliveryEmail = createServerFn({ method: "POST" })
         detail,
       );
 
+      await logMessage(deliveryLogMeta, {
+        recipient: delivery.customer_email,
+        subject: `Your ${productName} is ready`,
+        body: text,
+        status: "failed",
+        error: `Email provider error (${response.status}).`,
+      });
+
       throw new Error(
         "The email could not be sent. Check the Brevo configuration.",
       );
     }
+
+    await logMessage(deliveryLogMeta, {
+      recipient: delivery.customer_email,
+      subject: `Your ${productName} is ready`,
+      body: text,
+      status: "sent",
+    });
 
     /*
      * EMAIL SUCCESSFUL
