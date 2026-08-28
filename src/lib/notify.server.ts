@@ -56,17 +56,110 @@ export function emailConfigured(): boolean {
   return Boolean(process.env["BREVO_API_KEY"] && process.env["BREVO_FROM_EMAIL"]);
 }
 
+/** Metadata recorded in the Message Center history for every email attempt. */
+export type MessageLogMeta = {
+  message_type: string;
+  template_key?: string | null;
+  customer_id?: string | null;
+  order_id?: string | null;
+  /** "automated" (event driven) or "manual" (Message Generator). */
+  source?: "automated" | "manual";
+  sent_by?: string | null;
+  /** Unique key that stops the same automated message being logged/sent twice. */
+  dedupe_key?: string | null;
+};
+
+/** Writes one Message Center history row. Never throws. */
+export async function logMessage(
+  meta: MessageLogMeta,
+  entry: { recipient: string; subject: string; body: string; status: "sent" | "failed" | "draft" | "queued" | "cancelled"; error?: string | null },
+): Promise<void> {
+  try {
+    await supabaseAdmin.from("message_logs").insert({
+      message_type: meta.message_type,
+      template_key: meta.template_key ?? null,
+      channel: "email",
+      recipient: entry.recipient,
+      customer_id: meta.customer_id ?? null,
+      order_id: meta.order_id ?? null,
+      subject: entry.subject,
+      body: entry.body,
+      status: entry.status,
+      error: entry.error ?? null,
+      sent_by: meta.sent_by ?? null,
+      source: meta.source ?? "automated",
+      dedupe_key: meta.dedupe_key ?? null,
+    });
+  } catch (error) {
+    console.error("logMessage failed", error);
+  }
+}
+
+/** True when this exact automated message was already logged (duplicate guard). */
+export async function alreadySent(dedupeKey: string): Promise<boolean> {
+  try {
+    const { data } = await supabaseAdmin
+      .from("message_logs")
+      .select("id")
+      .eq("dedupe_key", dedupeKey)
+      .eq("status", "sent")
+      .maybeSingle();
+    return Boolean(data);
+  } catch {
+    return false;
+  }
+}
+
+/** Message Center templates/automation flags, stored in the existing store_settings table. */
+export async function getMessageCenterSettings(): Promise<{
+  templates: Record<string, { subject: string; body: string }>;
+  rules: Record<string, boolean>;
+}> {
+  try {
+    const { data } = await supabaseAdmin
+      .from("store_settings")
+      .select("value")
+      .eq("key", "message_center")
+      .maybeSingle();
+    const value = (data?.value ?? {}) as { templates?: Record<string, { subject: string; body: string }>; rules?: Record<string, boolean> };
+    return { templates: value.templates ?? {}, rules: value.rules ?? {} };
+  } catch {
+    return { templates: {}, rules: {} };
+  }
+}
+
+/** Automation rules default to ON; only an explicit `false` disables one. */
+export async function automationEnabled(trigger: string): Promise<boolean> {
+  const settings = await getMessageCenterSettings();
+  return settings.rules[trigger] !== false;
+}
+
 /** Sends an email through the existing Brevo integration. Never throws. */
 export async function sendBrevoEmail(input: {
   to: string;
   subject: string;
   html: string;
   text?: string;
+  log?: MessageLogMeta;
 }): Promise<{ ok: boolean; error?: string }> {
   const apiKey = process.env["BREVO_API_KEY"];
   const from = process.env["BREVO_FROM_EMAIL"];
-  if (!apiKey || !from)
-    return { ok: false, error: "Email provider is not configured. Add BREVO_API_KEY and BREVO_FROM_EMAIL." };
+  const record = async (status: "sent" | "failed", error?: string) => {
+    if (input.log) {
+      await logMessage(input.log, {
+        recipient: input.to,
+        subject: input.subject,
+        body: input.text ?? input.html,
+        status,
+        error: error ?? null,
+      });
+    }
+  };
+  if (!apiKey || !from) {
+    const error = "Email provider is not configured. Add BREVO_API_KEY and BREVO_FROM_EMAIL.";
+    await record("failed", error);
+    return { ok: false, error };
+  }
   try {
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
@@ -82,11 +175,15 @@ export async function sendBrevoEmail(input: {
     if (!res.ok) {
       const detail = await res.text().catch(() => "");
       console.error("Brevo email failed", res.status, detail);
-      return { ok: false, error: `Email provider error (${res.status}).` };
+      const error = `Email provider error (${res.status}).`;
+      await record("failed", error);
+      return { ok: false, error };
     }
+    await record("sent");
     return { ok: true };
   } catch (error) {
     console.error("Brevo email failed", error);
+    await record("failed", "Email request failed.");
     return { ok: false, error: "Email request failed." };
   }
 }
@@ -105,6 +202,8 @@ export async function emailAdminOrderAlert(order: {
 }): Promise<{ ok: boolean; error?: string }> {
   const settings = await getAdminNotifySettings();
   if (!settings.email_enabled) return { ok: false, error: "Email order notifications are disabled." };
+  if (!(await automationEnabled("new_order")))
+    return { ok: false, error: "The new-order automation rule is disabled." };
   if (!settings.email_address) return { ok: false, error: "No admin notification email configured." };
 
   const when = new Date().toLocaleString("en-GB", { timeZone: "Africa/Accra" });
@@ -128,9 +227,15 @@ export async function emailAdminOrderAlert(order: {
 
   return sendBrevoEmail({
     to: settings.email_address,
-    subject: `New DigitalHubGH Order — #${order.orderNumber}`,
+    subject: `🔔 New DigitalHubGH Order — #${order.orderNumber}`,
     html,
     text,
+    log: {
+      message_type: "admin_new_order",
+      template_key: "new_order",
+      source: "automated",
+      dedupe_key: `admin_new_order:${order.orderNumber}`,
+    },
   });
 }
 
