@@ -787,6 +787,60 @@ export type Database = {
           },
         ]
       }
+      message_logs: {
+        Row: {
+          body: string | null
+          channel: string
+          created_at: string
+          customer_id: string | null
+          dedupe_key: string | null
+          error: string | null
+          id: string
+          message_type: string
+          order_id: string | null
+          recipient: string | null
+          sent_by: string | null
+          source: string
+          status: string
+          subject: string | null
+          template_key: string | null
+        }
+        Insert: {
+          body?: string | null
+          channel?: string
+          created_at?: string
+          customer_id?: string | null
+          dedupe_key?: string | null
+          error?: string | null
+          id?: string
+          message_type: string
+          order_id?: string | null
+          recipient?: string | null
+          sent_by?: string | null
+          source?: string
+          status?: string
+          subject?: string | null
+          template_key?: string | null
+        }
+        Update: {
+          body?: string | null
+          channel?: string
+          created_at?: string
+          customer_id?: string | null
+          dedupe_key?: string | null
+          error?: string | null
+          id?: string
+          message_type?: string
+          order_id?: string | null
+          recipient?: string | null
+          sent_by?: string | null
+          source?: string
+          status?: string
+          subject?: string | null
+          template_key?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
