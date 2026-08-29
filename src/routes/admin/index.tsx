@@ -78,7 +78,7 @@ function Page() {
     { label: "Failed payments", value: String(s.failedPayments) },
   ];
 
-  const pending: { label: string; count: number; to: string }[] = [
+  const pending = [
     { label: "Payments awaiting verification", count: s.pendingActions.paymentsToVerify, to: "/admin/orders" },
     { label: "Orders awaiting fulfilment", count: s.pendingActions.ordersToFulfil, to: "/admin/orders" },
     { label: "Failed payments", count: s.pendingActions.failedPayments, to: "/admin/orders" },
@@ -184,7 +184,7 @@ function Page() {
                     <td>{shortDate(o.created_at)}</td>
                     <td className="text-right">
                       <Button asChild size="sm" variant="outline">
-                        <Link to="/admin/orders" search={{ order: o.order_number }}>
+                        <Link to="/admin/orders">
                           Open
                         </Link>
                       </Button>
