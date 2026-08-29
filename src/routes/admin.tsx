@@ -1,10 +1,13 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
+  Activity,
   BarChart3,
   Database,
   LifeBuoy,
+  MailPlus,
   Megaphone,
   Package,
+  PieChart,
   Receipt,
   Settings,
   Users,
@@ -26,9 +29,13 @@ const NAV = [
   { to: "/admin/inventory", label: "Digital Inventory", icon: Database },
   { to: "/admin/customers", label: "Customers", icon: Users },
   { to: "/admin/support", label: "Support & reviews", icon: LifeBuoy },
+  { to: "/admin/messages", label: "Message Center", icon: MailPlus },
+  { to: "/admin/analytics", label: "Analytics", icon: PieChart },
+  { to: "/admin/activity", label: "Activity Log", icon: Activity },
   { to: "/admin/marketing", label: "Coupons & news", icon: Megaphone },
   { to: "/admin/settings", label: "Settings", icon: Settings },
 ] as const;
+
 
 function Diagnostics() {
   const { user, roles, roleError, isStaff, staffFallback, projectUrl } = useAuth();
