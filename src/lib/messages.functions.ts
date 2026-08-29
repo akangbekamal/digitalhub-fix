@@ -158,7 +158,7 @@ export const sendManualMessage = createServerFn({ method: "POST" })
       adminId,
       action: result.ok ? "message_sent" : "message_failed",
       targetType: "message",
-      targetId: data.orderId ?? null,
+      targetId: data.orderId ?? undefined,
       description: `${data.subject} → ${data.to}`,
     });
     if (!result.ok) throw new Error(result.error ?? "Email could not be sent.");
