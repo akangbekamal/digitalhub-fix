@@ -231,6 +231,10 @@ export const placeOrder = createServerFn({ method: "POST" })
         `🛒 <b>New order</b>\n${order.order_number}\nCustomer: ${data.fullName} (${data.phone})\nTotal: GH₵${priced.total.toFixed(2)}`,
       );
 
+      // Customer confirmation email (Automation Rules: new_order).
+      const { dispatchOrderEvent } = await import("./notify.server");
+      await dispatchOrderEvent("new_order", order.id);
+
       // Email alert to the private admin address (no-op when disabled).
       await emailAdminOrderAlert({
         orderNumber: order.order_number,
@@ -314,7 +318,7 @@ export const requestRefund = createServerFn({ method: "POST" })
     const { telegramAlert } = await import("./notify.server");
     const { data: order } = await supabaseAdmin
       .from("orders")
-      .select("id, order_number, user_id, total")
+      .select("id, order_number, user_id, total, customer_name, customer_email")
       .eq("id", data.orderId)
       .maybeSingle();
     if (!order || order.user_id !== context.userId) throw new Error("Order not found.");
@@ -335,6 +339,38 @@ export const requestRefund = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     await telegramAlert(`↩️ <b>Refund requested</b>\n${order.order_number}\nReason: ${data.reason.slice(0, 200)}`);
+
+    // Notify staff in-app + email the private admin address (rule: refund_requested).
+    try {
+      const { notifyStaff, getAdminNotifySettings, sendAutomatedMessage } = await import("./notify.server");
+      const adminNotify = await getAdminNotifySettings();
+      if (adminNotify.website_enabled) {
+        await notifyStaff({
+          title: "Refund requested",
+          body: `${order.order_number}: ${data.reason.slice(0, 200)}`,
+          type: "refund",
+          link: "/admin/support",
+        });
+      }
+      if (adminNotify.email_enabled && adminNotify.email_address) {
+        await sendAutomatedMessage({
+          trigger: "refund_requested",
+          to: adminNotify.email_address,
+          vars: {
+            customer_name: order.customer_name ?? "",
+            customer_email: order.customer_email ?? "",
+            order_id: order.order_number,
+            amount: Number(order.total ?? 0).toFixed(2),
+          },
+          dedupeKey: `refund_requested:${order.id}`,
+          customerId: context.userId,
+          orderId: order.id,
+        });
+      }
+    } catch (error) {
+      console.error("refund request notification failed", error);
+    }
+
     return { ok: true };
   });
 
