@@ -24,12 +24,15 @@ export type AdminNotifySettings = {
   website_enabled: boolean;
   email_enabled: boolean;
   email_address: string;
+  /** Private inventory alert recipient (new inventory + low stock). Falls back to email_address. */
+  inventory_email: string;
 };
 
 const ADMIN_NOTIFY_DEFAULTS: AdminNotifySettings = {
   website_enabled: true,
   email_enabled: false,
   email_address: "",
+  inventory_email: "",
 };
 
 /** Private admin notification config. Never exposed to customers (RLS hides the `admin_notify` key). */
@@ -45,11 +48,19 @@ export async function getAdminNotifySettings(): Promise<AdminNotifySettings> {
       website_enabled: value.website_enabled !== false,
       email_enabled: value.email_enabled === true,
       email_address: String(value.email_address ?? "").trim(),
+      inventory_email: String(value.inventory_email ?? "").trim(),
     };
   } catch {
     return ADMIN_NOTIFY_DEFAULTS;
   }
 }
+
+/** Recipient for inventory alerts: the dedicated address, else the admin order address. */
+export async function getInventoryAlertEmail(): Promise<string> {
+  const s = await getAdminNotifySettings();
+  return s.inventory_email || s.email_address;
+}
+
 
 /** True when the existing Brevo server secrets are present. */
 export function emailConfigured(): boolean {
