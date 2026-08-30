@@ -770,7 +770,7 @@ export const reserveDigitalInventoryForOrder = createServerFn({ method: "POST" }
       .parse(data),
   )
   .handler(async ({ data, context }) => {
-    await requireStaff(context);
+    const adminId = await requireStaff(context);
 
     // The SQL function guards on auth.uid(), so it must be called as the
     // signed-in staff user. The service-role client has no auth.uid() and
@@ -795,6 +795,27 @@ export const reserveDigitalInventoryForOrder = createServerFn({ method: "POST" }
       throw new Error(
         "This inventory item is no longer available. Please select another item.",
       );
+    }
+
+    // Activity log + low-stock guard for the reserved product.
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { logAdminAction, checkDigitalLowStock } = await import("./notify.server");
+      const { data: item } = await supabaseAdmin
+        .from("digital_inventory")
+        .select("product_name, inventory_id")
+        .eq("id", data.inventoryId)
+        .maybeSingle();
+      await logAdminAction({
+        adminId,
+        action: "inventory_reserved",
+        targetType: "digital_inventory",
+        targetId: data.inventoryId,
+        description: `${item?.product_name ?? "Inventory"} reserved for an order`,
+      });
+      await checkDigitalLowStock(item?.product_name ?? null);
+    } catch (error) {
+      console.error("post-reservation tasks failed", error);
     }
 
     return {
