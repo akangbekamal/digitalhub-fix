@@ -398,3 +398,73 @@ export const claimReferral = createServerFn({ method: "POST" })
       .insert({ referrer_id: referrer.id, referred_id: context.userId, status: "pending" });
     return { ok: true };
   });
+
+/** Notifies staff + acknowledges the customer after a support ticket is created. */
+export const notifySupportTicketCreated = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ ticketId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: ticket } = await supabaseAdmin
+      .from("support_tickets")
+      .select("id, user_id, subject, category")
+      .eq("id", data.ticketId)
+      .maybeSingle();
+    if (!ticket || ticket.user_id !== context.userId) return { ok: false };
+
+    const { notifyStaff, getAdminNotifySettings, sendAutomatedMessage, sendBrevoEmail } = await import(
+      "./notify.server"
+    );
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("email, full_name")
+      .eq("id", ticket.user_id)
+      .maybeSingle();
+    const ref = ticket.id.slice(0, 8).toUpperCase();
+
+    try {
+      const adminNotify = await getAdminNotifySettings();
+      if (adminNotify.website_enabled) {
+        await notifyStaff({
+          title: "New support ticket",
+          body: `${ref} · ${ticket.subject}`,
+          type: "support",
+          link: "/admin/support",
+        });
+      }
+
+      // Customer acknowledgement (Automation Rules: support_created).
+      await sendAutomatedMessage({
+        trigger: "support_created",
+        templateKey: "support_received",
+        to: profile?.email ?? null,
+        vars: {
+          customer_name: profile?.full_name || "there",
+          customer_email: profile?.email ?? "",
+          support_ticket_id: ref,
+        },
+        dedupeKey: `support_created:${ticket.id}`,
+        customerId: ticket.user_id,
+      });
+
+      // Private staff alert.
+      if (adminNotify.email_enabled && adminNotify.email_address) {
+        await sendBrevoEmail({
+          to: adminNotify.email_address,
+          subject: `🎫 New support ticket ${ref}`,
+          html: `<div style="font-family:Arial,sans-serif;line-height:1.6"><p>New support ticket <strong>${ref}</strong></p><p>Subject: ${ticket.subject}</p><p>Category: ${ticket.category ?? "—"}</p><p><a href="/admin/support">Open Admin → Support</a></p></div>`,
+          text: `New support ticket ${ref}\nSubject: ${ticket.subject}`,
+          log: {
+            message_type: "admin_support_ticket",
+            template_key: "support_received",
+            source: "automated",
+            customer_id: ticket.user_id,
+            dedupe_key: `admin_support_ticket:${ticket.id}`,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("support ticket notification failed", error);
+    }
+    return { ok: true };
+  });
