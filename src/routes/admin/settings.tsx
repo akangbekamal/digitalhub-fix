@@ -60,12 +60,14 @@ type AdminNotify = {
   website_enabled: boolean;
   email_enabled: boolean;
   email_address: string;
+  inventory_email: string;
 };
 
 const defaultAdminNotify: AdminNotify = {
   website_enabled: true,
   email_enabled: false,
   email_address: "",
+  inventory_email: "",
 };
 
 export const Route = createFileRoute("/admin/settings")({
@@ -134,6 +136,7 @@ function SettingsPage() {
               website_enabled: v.website_enabled !== false,
               email_enabled: v.email_enabled === true,
               email_address: String(v.email_address ?? ""),
+              inventory_email: String(v.inventory_email ?? ""),
             };
           }
           continue;
@@ -521,6 +524,21 @@ function SettingsPage() {
             </Button>
           )}
         </div>
+
+        <label className={labelClass}>
+          <span>Inventory notification email</span>
+          <input
+            type="email"
+            value={adminNotify.inventory_email}
+            onChange={(e) => setAdminNotify((c) => ({ ...c, inventory_email: e.target.value }))}
+            placeholder="inventory@yourdomain.com"
+            className={inputClass}
+          />
+          <span className="block text-xs font-normal text-muted-foreground">
+            Private address for “New inventory added” and “Low stock” alerts. Leave empty to reuse the order
+            notification email. Never shown to customers.
+          </span>
+        </label>
       </section>
 
       <section className="space-y-4 rounded-2xl border border-border bg-card p-4 md:p-6">
