@@ -218,7 +218,7 @@ export const reviewPayment = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const adminId = await requireStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { notifyUser, telegramAlert, logAdminAction } = await import("./notify.server");
+    const { notifyUser, telegramAlert, logAdminAction, dispatchOrderEvent } = await import("./notify.server");
 
     const { data: payment } = await supabaseAdmin
       .from("payments")
@@ -338,6 +338,17 @@ export const reviewPayment = createServerFn({ method: "POST" })
       await supabaseAdmin.from("orders").update({ payment_status: "submitted" }).eq("id", order.id);
     }
 
+    // Automated customer emails (respects Automation Rules, one per event).
+    if (data.action === "approve") {
+      await dispatchOrderEvent("payment_approved", order.id, { dedupeSuffix: payment.id });
+      await dispatchOrderEvent("order_processing", order.id);
+    } else if (data.action === "reject") {
+      await dispatchOrderEvent("payment_rejected", order.id, {
+        dedupeSuffix: payment.id,
+        ...(data.note ? { extraVars: { admin_note: data.note } } : {}),
+      });
+    }
+
     await logAdminAction({
       adminId,
       action: `payment_${data.action}`,
@@ -372,7 +383,7 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const adminId = await requireStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { notifyUser, logAdminAction, telegramAlert } = await import("./notify.server");
+    const { notifyUser, logAdminAction, telegramAlert, dispatchOrderEvent } = await import("./notify.server");
 
     const { data: order } = await supabaseAdmin
       .from("orders")
@@ -407,6 +418,15 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
         link: `/dashboard/orders/${order.id}`,
       });
     }
+
+    // Automated status emails, de-duplicated per order + status.
+    const statusTrigger: Record<string, string> = {
+      processing: "order_processing",
+      completed: "order_completed",
+      cancelled: "order_cancelled",
+    };
+    const trigger = statusTrigger[data.status];
+    if (trigger) await dispatchOrderEvent(trigger, order.id);
 
     await logAdminAction({
       adminId,
@@ -505,7 +525,7 @@ export const replyToTicket = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const adminId = await requireStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { notifyUser, logAdminAction } = await import("./notify.server");
+    const { notifyUser, logAdminAction, sendAutomatedMessage } = await import("./notify.server");
 
     const { data: ticket } = await supabaseAdmin
       .from("support_tickets")
@@ -529,6 +549,24 @@ export const replyToTicket = createServerFn({ method: "POST" })
       type: "support",
       link: "/dashboard/support",
     });
+    // Email the customer that support replied.
+    const { data: replyProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("email, full_name")
+      .eq("id", ticket.user_id)
+      .maybeSingle();
+    await sendAutomatedMessage({
+      trigger: "support_reply",
+      to: replyProfile?.email ?? null,
+      vars: {
+        customer_name: replyProfile?.full_name || "there",
+        customer_email: replyProfile?.email ?? "",
+        support_ticket_id: ticket.id.slice(0, 8).toUpperCase(),
+      },
+      dedupeKey: `support_reply:${ticket.id}:${Date.now()}`,
+      customerId: ticket.user_id,
+    });
+
     await logAdminAction({ adminId, action: "support_reply", targetType: "ticket", targetId: ticket.id });
     return { ok: true };
   });
@@ -547,7 +585,7 @@ export const updateRefund = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const adminId = await requireStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { notifyUser, logAdminAction } = await import("./notify.server");
+    const { notifyUser, logAdminAction, dispatchOrderEvent } = await import("./notify.server");
 
     const { data: refund } = await supabaseAdmin
       .from("refunds")
@@ -576,6 +614,10 @@ export const updateRefund = createServerFn({ method: "POST" })
       type: "refund",
       link: `/dashboard/orders/${refund.order_id}`,
     });
+    if (data.status === "approved" || data.status === "rejected") {
+      await dispatchOrderEvent(`refund_${data.status}`, refund.order_id, { dedupeSuffix: refund.id });
+    }
+
     await logAdminAction({ adminId, action: `refund_${data.status}`, targetType: "refund", targetId: refund.id });
     return { ok: true };
   });
