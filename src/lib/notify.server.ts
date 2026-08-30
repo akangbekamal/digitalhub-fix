@@ -321,3 +321,113 @@ export async function assertStaff(supabase: {
   const { data, error } = await supabase.rpc("is_staff", { _user_id: userId });
   if (error || data !== true) throw new Error("Forbidden: staff access required");
 }
+
+/* ------------------------------------------------------------------
+ * Automated message dispatcher
+ * One entry point for every automated email so that automation rules,
+ * de-duplication, template rendering and Message History stay consistent.
+ * ------------------------------------------------------------------ */
+
+import { DEFAULT_TEMPLATES, renderTemplate, type MessageVars } from "./messages";
+
+/** Store identity used for {{store_name}} / {{store_email}} / {{store_phone}}. */
+export async function getStoreInfo(): Promise<{ name: string; email: string; phone: string }> {
+  try {
+    const { data } = await supabaseAdmin.from("store_settings").select("key, value").in("key", ["email", "phone"]);
+    const map = new Map((data ?? []).map((r) => [r.key, String(r.value ?? "").replace(/^"|"$/g, "")]));
+    return {
+      name: "DIGITAL HUB GH",
+      email: map.get("email") ?? "",
+      phone: map.get("phone") ?? "",
+    };
+  } catch {
+    return { name: "DIGITAL HUB GH", email: "", phone: "" };
+  }
+}
+
+export type AutomatedMessageInput = {
+  /** Automation rule key from the Message Center. */
+  trigger: string;
+  /** Template key (defaults to the trigger). */
+  templateKey?: string;
+  to: string | null | undefined;
+  vars: MessageVars;
+  /** Unique per event — guarantees one email per event. */
+  dedupeKey: string;
+  customerId?: string | null;
+  orderId?: string | null;
+};
+
+export type AutomatedMessageResult = { sent: boolean; reason?: string };
+
+/**
+ * Sends one automated message.
+ * - respects the Automation Rules toggle,
+ * - never sends the same event twice (dedupe_key),
+ * - always records the attempt in Message History.
+ * Never throws: an alert must never break the business action.
+ */
+export async function sendAutomatedMessage(input: AutomatedMessageInput): Promise<AutomatedMessageResult> {
+  try {
+    const templateKey = input.templateKey ?? input.trigger;
+    if (!(await automationEnabled(input.trigger))) return { sent: false, reason: "rule_disabled" };
+    if (await alreadySent(input.dedupeKey)) return { sent: false, reason: "already_sent" };
+
+    const recipient = (input.to ?? "").trim();
+    const settings = await getMessageCenterSettings();
+    const base = DEFAULT_TEMPLATES.find((t) => t.key === templateKey);
+    const override = settings.templates[templateKey];
+    const subjectTpl = override?.subject ?? base?.subject;
+    const bodyTpl = override?.body ?? base?.body;
+    if (!subjectTpl || !bodyTpl) return { sent: false, reason: "template_missing" };
+
+    const store = await getStoreInfo();
+    const vars: MessageVars = {
+      store_name: store.name,
+      store_email: store.email,
+      store_phone: store.phone,
+      currency: "GH₵",
+      ...input.vars,
+    };
+    const subject = renderTemplate(subjectTpl, vars);
+    const body = renderTemplate(bodyTpl, vars);
+
+    const meta: MessageLogMeta = {
+      message_type: templateKey,
+      template_key: templateKey,
+      customer_id: input.customerId ?? null,
+      order_id: input.orderId ?? null,
+      source: "automated",
+      dedupe_key: input.dedupeKey,
+    };
+
+    if (!recipient) {
+      await logMessage(meta, {
+        recipient: "",
+        subject,
+        body,
+        status: "cancelled",
+        error: "No recipient address available for this event.",
+      });
+      return { sent: false, reason: "no_recipient" };
+    }
+
+    const html = `<div style="font-family:Arial,sans-serif;line-height:1.6">${body
+      .split("\n")
+      .map((line) => (line.trim() ? `<p>${escapeHtmlText(line)}</p>` : "<br>"))
+      .join("")}</div>`;
+
+    const result = await sendBrevoEmail({ to: recipient, subject, html, text: body, log: meta });
+    return result.ok ? { sent: true } : { sent: false, reason: result.error ?? "send_failed" };
+  } catch (error) {
+    console.error("sendAutomatedMessage failed", error);
+    return { sent: false, reason: "unexpected_error" };
+  }
+}
+
+function escapeHtmlText(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
