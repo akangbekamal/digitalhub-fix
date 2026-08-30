@@ -479,3 +479,25 @@ export async function orderMessageVars(orderId: string): Promise<{
     },
   };
 }
+
+/**
+ * Sends an order-related automated customer email using real order data.
+ * De-duplicated per (trigger, order) so a status can never email twice.
+ */
+export async function dispatchOrderEvent(
+  trigger: string,
+  orderId: string,
+  options?: { dedupeSuffix?: string; extraVars?: MessageVars; templateKey?: string },
+): Promise<AutomatedMessageResult> {
+  const info = await orderMessageVars(orderId);
+  if (!info) return { sent: false, reason: "order_missing" };
+  return sendAutomatedMessage({
+    trigger,
+    ...(options?.templateKey ? { templateKey: options.templateKey } : {}),
+    to: info.email,
+    vars: { ...info.vars, ...(options?.extraVars ?? {}) },
+    dedupeKey: `${trigger}:${orderId}${options?.dedupeSuffix ? `:${options.dedupeSuffix}` : ""}`,
+    customerId: info.userId,
+    orderId,
+  });
+}
