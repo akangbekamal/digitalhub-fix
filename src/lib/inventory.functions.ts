@@ -477,6 +477,36 @@ export const saveDigitalInventory = createServerFn({
       if (error) throw new Error(error.message);
     }
 
+    /*
+     * Activity log + private admin alert for newly added inventory.
+     * Credentials are never included in the email.
+     */
+    const { logAdminAction, notifyInventoryAdded, checkDigitalLowStock } = await import("./notify.server");
+    await logAdminAction({
+      adminId,
+      action: data.id ? "inventory_edited" : "inventory_added",
+      targetType: "digital_inventory",
+      targetId: inventoryId,
+      description: `${payload.product_name} (${payload.status})`,
+    });
+
+    if (!data.id) {
+      const { data: created } = await supabaseAdmin
+        .from("digital_inventory")
+        .select("inventory_id")
+        .eq("id", inventoryId)
+        .maybeSingle();
+      await notifyInventoryAdded([
+        {
+          inventoryId: (created?.inventory_id as string | null) ?? inventoryId,
+          productName: payload.product_name,
+          quantity: payload.quantity,
+        },
+      ]);
+    }
+
+    await checkDigitalLowStock(payload.product_name);
+
     return {
       ok: true,
       inventoryId,

@@ -501,3 +501,70 @@ export async function dispatchOrderEvent(
     orderId,
   });
 }
+
+/**
+ * Low-stock guard for digital inventory.
+ * Alerts staff (in-app + private inventory email) once per product per
+ * low-stock episode — the dedupe key includes the remaining count.
+ */
+export async function checkDigitalLowStock(productName: string | null | undefined): Promise<void> {
+  const name = (productName ?? "").trim();
+  if (!name) return;
+  try {
+    const { data: thresholdRow } = await supabaseAdmin
+      .from("store_settings")
+      .select("value")
+      .eq("key", "inventory_low_threshold")
+      .maybeSingle();
+    const threshold = Number(String(thresholdRow?.value ?? 2).replace(/"/g, "")) || 2;
+
+    const { count } = await supabaseAdmin
+      .from("digital_inventory")
+      .select("id", { count: "exact", head: true })
+      .eq("product_name", name)
+      .eq("status", "available");
+    const remaining = count ?? 0;
+    if (remaining > threshold) return;
+
+    await notifyStaff({
+      title: `Low stock: ${name}`,
+      body: `${remaining} available account(s) left.`,
+      type: "inventory",
+      link: "/admin/inventory",
+    });
+
+    const to = await getInventoryAlertEmail();
+    const notify = await getAdminNotifySettings();
+    if (!notify.email_enabled || !to) return;
+    await sendAutomatedMessage({
+      trigger: "low_inventory",
+      to,
+      vars: { product_name: name, product_names: `${name} — ${remaining} left` },
+      dedupeKey: `low_inventory:${name}:${remaining}`,
+    });
+  } catch (error) {
+    console.error("checkDigitalLowStock failed", error);
+  }
+}
+
+/** Private admin alert for newly added inventory. Never includes credentials. */
+export async function notifyInventoryAdded(items: { inventoryId: string; productName: string; quantity: number }[]): Promise<void> {
+  if (!items.length) return;
+  try {
+    const to = await getInventoryAlertEmail();
+    const notify = await getAdminNotifySettings();
+    if (!notify.email_enabled || !to) return;
+    const list = items.map((i) => `${i.productName} × ${i.quantity} (${i.inventoryId})`).join("\n");
+    await sendAutomatedMessage({
+      trigger: "inventory_added",
+      to,
+      vars: {
+        product_name: items[0]?.productName ?? "",
+        product_names: list,
+      },
+      dedupeKey: `inventory_added:${items.map((i) => i.inventoryId).join(",")}`,
+    });
+  } catch (error) {
+    console.error("notifyInventoryAdded failed", error);
+  }
+}
