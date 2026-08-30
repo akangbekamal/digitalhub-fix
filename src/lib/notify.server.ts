@@ -431,3 +431,51 @@ function escapeHtmlText(value: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
+
+/** Builds real template variables for an order (no placeholders left unresolved). */
+export async function orderMessageVars(orderId: string): Promise<{
+  email: string;
+  userId: string | null;
+  orderNumber: string;
+  vars: MessageVars;
+} | null> {
+  const { data: order } = await supabaseAdmin
+    .from("orders")
+    .select("id, order_number, user_id, customer_name, customer_email, total, status, payment_status, created_at")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (!order) return null;
+
+  const { data: items } = await supabaseAdmin
+    .from("order_items")
+    .select("product_name, quantity")
+    .eq("order_id", order.id);
+  const names = (items ?? []).map((i) => `${i.product_name} × ${i.quantity}`);
+
+  const { data: payment } = await supabaseAdmin
+    .from("payments")
+    .select("method, reference, status")
+    .eq("order_id", order.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return {
+    email: order.customer_email ?? "",
+    userId: order.user_id ?? null,
+    orderNumber: order.order_number,
+    vars: {
+      customer_name: order.customer_name ?? "there",
+      customer_email: order.customer_email ?? "",
+      order_id: order.order_number,
+      product_name: names[0]?.split(" × ")[0] ?? "",
+      product_names: names.join(", "),
+      amount: Number(order.total ?? 0).toFixed(2),
+      payment_method: payment?.method === "mobile_money" ? "Mobile Money" : (payment?.method ?? ""),
+      payment_status: String(order.payment_status ?? ""),
+      order_status: String(order.status ?? "").replace(/_/g, " "),
+      transaction_id: (payment as { reference?: string | null } | null)?.reference ?? "",
+      order_date: new Date(order.created_at).toLocaleString("en-GB", { timeZone: "Africa/Accra" }),
+    },
+  };
+}
