@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { notifySupportTicketCreated } from "@/lib/store.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Loader2, MessageSquarePlus, Send } from "lucide-react";
@@ -44,6 +46,7 @@ function Page() {
   const [message, setMessage] = useState("");
   const [reply, setReply] = useState("");
   const [busy, setBusy] = useState(false);
+  const notifyTicket = useServerFn(notifySupportTicketCreated);
 
   const createTicket = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +66,11 @@ function Page() {
       setSubject("");
       setMessage("");
       setActiveId(ticket.id);
+      try {
+        await notifyTicket({ data: { ticketId: ticket.id } });
+      } catch {
+        /* notification failures must never block ticket creation */
+      }
       toast.success("Ticket created — we will reply shortly.");
       await qc.invalidateQueries({ queryKey: ["my-tickets"] });
     } catch (err) {

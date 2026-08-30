@@ -24,12 +24,15 @@ export type AdminNotifySettings = {
   website_enabled: boolean;
   email_enabled: boolean;
   email_address: string;
+  /** Private inventory alert recipient (new inventory + low stock). Falls back to email_address. */
+  inventory_email: string;
 };
 
 const ADMIN_NOTIFY_DEFAULTS: AdminNotifySettings = {
   website_enabled: true,
   email_enabled: false,
   email_address: "",
+  inventory_email: "",
 };
 
 /** Private admin notification config. Never exposed to customers (RLS hides the `admin_notify` key). */
@@ -45,11 +48,19 @@ export async function getAdminNotifySettings(): Promise<AdminNotifySettings> {
       website_enabled: value.website_enabled !== false,
       email_enabled: value.email_enabled === true,
       email_address: String(value.email_address ?? "").trim(),
+      inventory_email: String(value.inventory_email ?? "").trim(),
     };
   } catch {
     return ADMIN_NOTIFY_DEFAULTS;
   }
 }
+
+/** Recipient for inventory alerts: the dedicated address, else the admin order address. */
+export async function getInventoryAlertEmail(): Promise<string> {
+  const s = await getAdminNotifySettings();
+  return s.inventory_email || s.email_address;
+}
+
 
 /** True when the existing Brevo server secrets are present. */
 export function emailConfigured(): boolean {
@@ -309,4 +320,251 @@ export async function assertStaff(supabase: {
 }, userId: string): Promise<void> {
   const { data, error } = await supabase.rpc("is_staff", { _user_id: userId });
   if (error || data !== true) throw new Error("Forbidden: staff access required");
+}
+
+/* ------------------------------------------------------------------
+ * Automated message dispatcher
+ * One entry point for every automated email so that automation rules,
+ * de-duplication, template rendering and Message History stay consistent.
+ * ------------------------------------------------------------------ */
+
+import { DEFAULT_TEMPLATES, renderTemplate, type MessageVars } from "./messages";
+
+/** Store identity used for {{store_name}} / {{store_email}} / {{store_phone}}. */
+export async function getStoreInfo(): Promise<{ name: string; email: string; phone: string }> {
+  try {
+    const { data } = await supabaseAdmin.from("store_settings").select("key, value").in("key", ["email", "phone"]);
+    const map = new Map((data ?? []).map((r) => [r.key, String(r.value ?? "").replace(/^"|"$/g, "")]));
+    return {
+      name: "DIGITAL HUB GH",
+      email: map.get("email") ?? "",
+      phone: map.get("phone") ?? "",
+    };
+  } catch {
+    return { name: "DIGITAL HUB GH", email: "", phone: "" };
+  }
+}
+
+export type AutomatedMessageInput = {
+  /** Automation rule key from the Message Center. */
+  trigger: string;
+  /** Template key (defaults to the trigger). */
+  templateKey?: string;
+  to: string | null | undefined;
+  vars: MessageVars;
+  /** Unique per event — guarantees one email per event. */
+  dedupeKey: string;
+  customerId?: string | null;
+  orderId?: string | null;
+};
+
+export type AutomatedMessageResult = { sent: boolean; reason?: string };
+
+/**
+ * Sends one automated message.
+ * - respects the Automation Rules toggle,
+ * - never sends the same event twice (dedupe_key),
+ * - always records the attempt in Message History.
+ * Never throws: an alert must never break the business action.
+ */
+export async function sendAutomatedMessage(input: AutomatedMessageInput): Promise<AutomatedMessageResult> {
+  try {
+    const templateKey = input.templateKey ?? input.trigger;
+    if (!(await automationEnabled(input.trigger))) return { sent: false, reason: "rule_disabled" };
+    if (await alreadySent(input.dedupeKey)) return { sent: false, reason: "already_sent" };
+
+    const recipient = (input.to ?? "").trim();
+    const settings = await getMessageCenterSettings();
+    const base = DEFAULT_TEMPLATES.find((t) => t.key === templateKey);
+    const override = settings.templates[templateKey];
+    const subjectTpl = override?.subject ?? base?.subject;
+    const bodyTpl = override?.body ?? base?.body;
+    if (!subjectTpl || !bodyTpl) return { sent: false, reason: "template_missing" };
+
+    const store = await getStoreInfo();
+    const vars: MessageVars = {
+      store_name: store.name,
+      store_email: store.email,
+      store_phone: store.phone,
+      currency: "GH₵",
+      ...input.vars,
+    };
+    const subject = renderTemplate(subjectTpl, vars);
+    const body = renderTemplate(bodyTpl, vars);
+
+    const meta: MessageLogMeta = {
+      message_type: templateKey,
+      template_key: templateKey,
+      customer_id: input.customerId ?? null,
+      order_id: input.orderId ?? null,
+      source: "automated",
+      dedupe_key: input.dedupeKey,
+    };
+
+    if (!recipient) {
+      await logMessage(meta, {
+        recipient: "",
+        subject,
+        body,
+        status: "cancelled",
+        error: "No recipient address available for this event.",
+      });
+      return { sent: false, reason: "no_recipient" };
+    }
+
+    const html = `<div style="font-family:Arial,sans-serif;line-height:1.6">${body
+      .split("\n")
+      .map((line) => (line.trim() ? `<p>${escapeHtmlText(line)}</p>` : "<br>"))
+      .join("")}</div>`;
+
+    const result = await sendBrevoEmail({ to: recipient, subject, html, text: body, log: meta });
+    return result.ok ? { sent: true } : { sent: false, reason: result.error ?? "send_failed" };
+  } catch (error) {
+    console.error("sendAutomatedMessage failed", error);
+    return { sent: false, reason: "unexpected_error" };
+  }
+}
+
+function escapeHtmlText(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+/** Builds real template variables for an order (no placeholders left unresolved). */
+export async function orderMessageVars(orderId: string): Promise<{
+  email: string;
+  userId: string | null;
+  orderNumber: string;
+  vars: MessageVars;
+} | null> {
+  const { data: order } = await supabaseAdmin
+    .from("orders")
+    .select("id, order_number, user_id, customer_name, customer_email, total, status, payment_status, created_at")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (!order) return null;
+
+  const { data: items } = await supabaseAdmin
+    .from("order_items")
+    .select("product_name, quantity")
+    .eq("order_id", order.id);
+  const names = (items ?? []).map((i) => `${i.product_name} × ${i.quantity}`);
+
+  const { data: payment } = await supabaseAdmin
+    .from("payments")
+    .select("method, reference, status")
+    .eq("order_id", order.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return {
+    email: order.customer_email ?? "",
+    userId: order.user_id ?? null,
+    orderNumber: order.order_number,
+    vars: {
+      customer_name: order.customer_name ?? "there",
+      customer_email: order.customer_email ?? "",
+      order_id: order.order_number,
+      product_name: names[0]?.split(" × ")[0] ?? "",
+      product_names: names.join(", "),
+      amount: Number(order.total ?? 0).toFixed(2),
+      payment_method: payment?.method === "mobile_money" ? "Mobile Money" : (payment?.method ?? ""),
+      payment_status: String(order.payment_status ?? ""),
+      order_status: String(order.status ?? "").replace(/_/g, " "),
+      transaction_id: (payment as { reference?: string | null } | null)?.reference ?? "",
+      order_date: new Date(order.created_at).toLocaleString("en-GB", { timeZone: "Africa/Accra" }),
+    },
+  };
+}
+
+/**
+ * Sends an order-related automated customer email using real order data.
+ * De-duplicated per (trigger, order) so a status can never email twice.
+ */
+export async function dispatchOrderEvent(
+  trigger: string,
+  orderId: string,
+  options?: { dedupeSuffix?: string; extraVars?: MessageVars; templateKey?: string },
+): Promise<AutomatedMessageResult> {
+  const info = await orderMessageVars(orderId);
+  if (!info) return { sent: false, reason: "order_missing" };
+  return sendAutomatedMessage({
+    trigger,
+    ...(options?.templateKey ? { templateKey: options.templateKey } : {}),
+    to: info.email,
+    vars: { ...info.vars, ...(options?.extraVars ?? {}) },
+    dedupeKey: `${trigger}:${orderId}${options?.dedupeSuffix ? `:${options.dedupeSuffix}` : ""}`,
+    customerId: info.userId,
+    orderId,
+  });
+}
+
+/**
+ * Low-stock guard for digital inventory.
+ * Alerts staff (in-app + private inventory email) once per product per
+ * low-stock episode — the dedupe key includes the remaining count.
+ */
+export async function checkDigitalLowStock(productName: string | null | undefined): Promise<void> {
+  const name = (productName ?? "").trim();
+  if (!name) return;
+  try {
+    const { data: thresholdRow } = await supabaseAdmin
+      .from("store_settings")
+      .select("value")
+      .eq("key", "inventory_low_threshold")
+      .maybeSingle();
+    const threshold = Number(String(thresholdRow?.value ?? 2).replace(/"/g, "")) || 2;
+
+    const { count } = await supabaseAdmin
+      .from("digital_inventory")
+      .select("id", { count: "exact", head: true })
+      .eq("product_name", name)
+      .eq("status", "available");
+    const remaining = count ?? 0;
+    if (remaining > threshold) return;
+
+    await notifyStaff({
+      title: `Low stock: ${name}`,
+      body: `${remaining} available account(s) left.`,
+      type: "inventory",
+      link: "/admin/inventory",
+    });
+
+    const to = await getInventoryAlertEmail();
+    const notify = await getAdminNotifySettings();
+    if (!notify.email_enabled || !to) return;
+    await sendAutomatedMessage({
+      trigger: "low_inventory",
+      to,
+      vars: { product_name: name, product_names: `${name} — ${remaining} left` },
+      dedupeKey: `low_inventory:${name}:${remaining}`,
+    });
+  } catch (error) {
+    console.error("checkDigitalLowStock failed", error);
+  }
+}
+
+/** Private admin alert for newly added inventory. Never includes credentials. */
+export async function notifyInventoryAdded(items: { inventoryId: string; productName: string; quantity: number }[]): Promise<void> {
+  if (!items.length) return;
+  try {
+    const to = await getInventoryAlertEmail();
+    const notify = await getAdminNotifySettings();
+    if (!notify.email_enabled || !to) return;
+    const list = items.map((i) => `${i.productName} × ${i.quantity} (${i.inventoryId})`).join("\n");
+    await sendAutomatedMessage({
+      trigger: "inventory_added",
+      to,
+      vars: {
+        product_name: items[0]?.productName ?? "",
+        product_names: list,
+      },
+      dedupeKey: `inventory_added:${items.map((i) => i.inventoryId).join(",")}`,
+    });
+  } catch (error) {
+    console.error("notifyInventoryAdded failed", error);
+  }
 }
