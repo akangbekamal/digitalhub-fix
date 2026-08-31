@@ -222,7 +222,9 @@ function Page() {
               <Button type="submit" className="w-full" disabled={busy}>
                 {busy && <Loader2 className="mr-2 size-4 animate-spin" />} Create account
               </Button>
+              {googleButton}
             </form>
+
           </TabsContent>
         </Tabs>
 
