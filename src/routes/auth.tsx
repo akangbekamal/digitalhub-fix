@@ -56,6 +56,24 @@ function Page() {
     toast.success("Welcome back!");
   };
 
+  const [googleBusy, setGoogleBusy] = useState(false);
+
+  const continueWithGoogle = async () => {
+    setGoogleBusy(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}${safeRedirect}`,
+        queryParams: { prompt: "select_account" },
+      },
+    });
+    if (error) {
+      setGoogleBusy(false);
+      console.error("[auth] google sign-in failed", error);
+      toast.error(`Google sign-in failed: ${error.message}`);
+    }
+  };
+
   const forgotPassword = async () => {
     if (!email.trim()) {
       toast.error("Enter your email first, then tap reset.");
@@ -73,6 +91,44 @@ function Page() {
     }
     toast.success("Reset link sent", { description: "Check your inbox for the password reset email." });
   };
+
+  const googleButton = (
+    <>
+      <div className="relative py-1">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-border" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-card px-2 text-xs uppercase tracking-wide text-muted-foreground">or</span>
+        </div>
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        onClick={() => void continueWithGoogle()}
+        disabled={googleBusy || busy}
+        aria-label="Continue with Google"
+      >
+        {googleBusy ? (
+          <>
+            <Loader2 className="mr-2 size-4 animate-spin" /> Connecting to Google...
+          </>
+        ) : (
+          <>
+            <svg className="mr-2 size-4" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.4 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.2 17.7 9.5 24 9.5z" />
+              <path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.1 5.4-4.6 7l7.2 5.6c4.2-3.9 6.6-9.6 6.6-17.1z" />
+              <path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-2.9-.8-4.7s.3-3.3.8-4.7l-7.9-6.1C1 16.4 0 20.1 0 24s1 7.6 2.6 10.8l7.9-6.1z" />
+              <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.9l-7.2-5.6c-2 1.4-4.6 2.2-8.7 2.2-6.3 0-11.6-3.7-13.5-9.1l-7.9 6.1C6.5 42.6 14.6 48 24 48z" />
+            </svg>
+            Continue with Google
+          </>
+        )}
+      </Button>
+    </>
+  );
+
 
 
   const signup = async (e: React.FormEvent) => {
@@ -133,8 +189,9 @@ function Page() {
               >
                 Forgot your password?
               </button>
-
+              {googleButton}
             </form>
+
           </TabsContent>
 
           <TabsContent value="signup">
@@ -165,7 +222,9 @@ function Page() {
               <Button type="submit" className="w-full" disabled={busy}>
                 {busy && <Loader2 className="mr-2 size-4 animate-spin" />} Create account
               </Button>
+              {googleButton}
             </form>
+
           </TabsContent>
         </Tabs>
 
