@@ -331,6 +331,11 @@ const sendDeliveryEmail = async () => {
     toast.success("Delivery email sent successfully.");
 
     await reservedDelivery.refetch();
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["digital-inventory-admin"] }),
+      qc.invalidateQueries({ queryKey: ["admin-orders"] }),
+      qc.invalidateQueries({ queryKey: ["admin-stats"] }),
+    ]);
   } catch (error) {
     console.error("Failed to send delivery email:", error);
 
