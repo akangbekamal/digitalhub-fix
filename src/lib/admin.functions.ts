@@ -1141,7 +1141,7 @@ const { error: inventoryUpdateError } = await (
   supabaseAdmin.from("digital_inventory" as any) as any
 )
   .update({
-    status: "delivered",
+    status: "sold",
     delivery_status: "delivered",
     date_sold: new Date().toISOString(),
   })
@@ -1239,13 +1239,18 @@ if (inventoryUpdateError) {
       action: "digital_delivery_email_sent",
       targetType: "digital_delivery",
       targetId: delivery.id,
-     description: `Digital delivery sent to ${delivery.customer_email}; inventory marked delivered and order completed.`,
+     description: `Digital delivery sent to ${delivery.customer_email}; inventory marked sold and order completed.`,
     });
+
+  // Low-stock guard once the item leaves availability.
+  await (await import("./notify.server")).checkDigitalLowStock(
+    (inventory as { product_name?: string | null }).product_name ?? null,
+  );
 
   return {
   ok: true,
   deliveryStatus: "sent",
-  inventoryStatus: "delivered",
+  inventoryStatus: "sold",
   orderStatus: "completed",
 };
   });
