@@ -189,8 +189,9 @@ function Page() {
               >
                 Forgot your password?
               </button>
-
+              {googleButton}
             </form>
+
           </TabsContent>
 
           <TabsContent value="signup">
