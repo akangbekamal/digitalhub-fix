@@ -21,8 +21,15 @@ const NAV = [
 ] as const;
 
 function Layout() {
-  const { user, loading } = useAuth();
+  const { user, loading, isStaff } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && isStaff) {
+      void navigate({ to: "/admin", replace: true });
+    }
+  }, [loading, isStaff, navigate]);
 
   if (loading) {
     return (
