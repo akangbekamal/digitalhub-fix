@@ -10,6 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+function staffRedirect(redirect: string | undefined) {
+  if (!redirect) return "/admin";
+  return redirect.startsWith("/dashboard") ? "/admin" : redirect;
+}
+
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
@@ -27,7 +32,7 @@ export const Route = createFileRoute("/auth")({
 
 function Page() {
   const { mode, redirect } = Route.useSearch();
-  const { user } = useAuth();
+  const { user, isStaff } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<"login" | "signup">(mode ?? "login");
   const [busy, setBusy] = useState(false);
@@ -38,10 +43,11 @@ function Page() {
   const [phone, setPhone] = useState("");
 
   const safeRedirect = redirect && redirect.startsWith("/") ? redirect : "/dashboard";
+  const postAuthRedirect = isStaff ? (redirect?.startsWith("/dashboard") ? "/admin" : redirect ?? "/admin") : safeRedirect;
 
   useEffect(() => {
-    if (user) void navigate({ to: safeRedirect });
-  }, [user, safeRedirect, navigate]);
+    if (user) void navigate({ to: postAuthRedirect });
+  }, [user, postAuthRedirect, navigate]);
 
   const login = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -91,16 +91,17 @@ export function Header() {
               <div className="my-2 h-px bg-sidebar-border" />
               {user ? (
                 <>
-                  {ACCOUNT_LINKS.map((item) => (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      onClick={() => setOpen(false)}
-                      className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent"
-                    >
-                      <item.icon className="size-4" /> {item.label}
-                    </Link>
-                  ))}
+                  {!isStaff &&
+                    ACCOUNT_LINKS.map((item) => (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent"
+                      >
+                        <item.icon className="size-4" /> {item.label}
+                      </Link>
+                    ))}
                   {isStaff && (
                     <Link
                       to="/admin"
@@ -194,16 +195,16 @@ export function Header() {
                     {profile?.full_name || user.email}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {ACCOUNT_LINKS.map((item) => (
-                    <DropdownMenuItem key={item.to} asChild>
-                      <Link to={item.to}>
-                        <item.icon className="mr-2 size-4" /> {item.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
+                  {!isStaff &&
+                    ACCOUNT_LINKS.map((item) => (
+                      <DropdownMenuItem key={item.to} asChild>
+                        <Link to={item.to}>
+                          <item.icon className="mr-2 size-4" /> {item.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
                   {isStaff && (
                     <>
-                      <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link to="/admin" className="font-semibold text-primary">
                           <Shield className="mr-2 size-4" /> Admin Dashboard

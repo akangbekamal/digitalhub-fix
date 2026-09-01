@@ -1,4 +1,5 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Bell, Download, LifeBuoy, LayoutDashboard, Receipt, UserRound, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState, LoadingState } from "@/components/StateBlocks";
@@ -20,8 +21,15 @@ const NAV = [
 ] as const;
 
 function Layout() {
-  const { user, loading } = useAuth();
+  const { user, loading, isStaff } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && isStaff) {
+      void navigate({ to: "/admin", replace: true });
+    }
+  }, [loading, isStaff, navigate]);
 
   if (loading) {
     return (
