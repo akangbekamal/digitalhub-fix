@@ -10,6 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+function staffRedirect(redirect: string | undefined) {
+  if (!redirect) return "/admin";
+  return redirect.startsWith("/dashboard") ? "/admin" : redirect;
+}
+
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
