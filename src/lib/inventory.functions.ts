@@ -293,7 +293,7 @@ export const saveDigitalInventory = createServerFn({
       selling_price: data.selling_price,
       discount,
       final_selling_price: finalSellingPrice,
-      profit,
+
 
       warranty_period: nullableText(data.warranty_period),
       warranty_start_date: nullableDate(
