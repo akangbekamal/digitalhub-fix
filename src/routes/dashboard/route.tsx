@@ -1,4 +1,5 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Bell, Download, LifeBuoy, LayoutDashboard, Receipt, UserRound, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState, LoadingState } from "@/components/StateBlocks";
