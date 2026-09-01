@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Check,
   Eye,
@@ -108,6 +108,10 @@ function Page() {
   const [selectedInventoryId, setSelectedInventoryId] =
     useState("");
 
+  const [showAllInventory, setShowAllInventory] =
+    useState(false);
+
+
   const [deliveryBusy, setDeliveryBusy] =
     useState(false);
 
@@ -186,9 +190,38 @@ const [deliveryEmailBusy, setDeliveryEmailBusy] =
     },
   });
 
+  // Only offer inventory that matches the products in this order,
+  // matched by catalog product id first and product name as a fallback.
+  const matchingInventory = useMemo(() => {
+    const all = (inventory.data ?? []) as any[];
+
+    if (!deliveryOrder) return all;
+
+    const items = (deliveryOrder.order_items ?? []) as any[];
+    const ids = new Set(
+      items.map((i) => i.product_id).filter(Boolean),
+    );
+    const names = new Set(
+      items
+        .map((i) => String(i.product_name ?? "").trim().toLowerCase())
+        .filter(Boolean),
+    );
+
+    return all.filter(
+      (item) =>
+        (item.product_id && ids.has(item.product_id)) ||
+        names.has(String(item.product_name ?? "").trim().toLowerCase()),
+    );
+  }, [inventory.data, deliveryOrder]);
+
+  const visibleInventory = showAllInventory
+    ? ((inventory.data ?? []) as any[])
+    : matchingInventory;
+
   // --------------------------------------------------
   // RESERVED DELIVERY
   // --------------------------------------------------
+
 
   const reservedDelivery = useQuery({
     queryKey: [

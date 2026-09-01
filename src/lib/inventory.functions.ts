@@ -238,8 +238,10 @@ export const saveDigitalInventory = createServerFn({
       sellingPrice - discount,
     );
 
-    const supplierCost = data.supplier_cost ?? 0;
-    const profit = finalSellingPrice - supplierCost;
+    // NOTE: digital_inventory.profit is a GENERATED column in the database
+    // (final_selling_price - supplier_cost). It must never be written to.
+
+
 
     const payload = {
       product_id:
@@ -291,7 +293,7 @@ export const saveDigitalInventory = createServerFn({
       selling_price: data.selling_price,
       discount,
       final_selling_price: finalSellingPrice,
-      profit,
+
 
       warranty_period: nullableText(data.warranty_period),
       warranty_start_date: nullableDate(
