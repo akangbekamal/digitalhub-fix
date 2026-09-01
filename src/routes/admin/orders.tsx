@@ -108,6 +108,10 @@ function Page() {
   const [selectedInventoryId, setSelectedInventoryId] =
     useState("");
 
+  const [showAllInventory, setShowAllInventory] =
+    useState(false);
+
+
   const [deliveryBusy, setDeliveryBusy] =
     useState(false);
 
