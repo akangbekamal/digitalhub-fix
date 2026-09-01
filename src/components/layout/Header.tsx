@@ -195,16 +195,16 @@ export function Header() {
                     {profile?.full_name || user.email}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {ACCOUNT_LINKS.map((item) => (
-                    <DropdownMenuItem key={item.to} asChild>
-                      <Link to={item.to}>
-                        <item.icon className="mr-2 size-4" /> {item.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
+                  {!isStaff &&
+                    ACCOUNT_LINKS.map((item) => (
+                      <DropdownMenuItem key={item.to} asChild>
+                        <Link to={item.to}>
+                          <item.icon className="mr-2 size-4" /> {item.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
                   {isStaff && (
                     <>
-                      <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link to="/admin" className="font-semibold text-primary">
                           <Shield className="mr-2 size-4" /> Admin Dashboard
