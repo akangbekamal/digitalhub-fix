@@ -304,23 +304,61 @@ function Section({
   title,
   description,
   children,
+  when = true,
+  defaultOpen = false,
 }: {
   title: string;
   description?: string;
   children: React.ReactNode;
+  /** Hide the whole section when it is irrelevant for the delivery type. */
+  when?: boolean;
+  defaultOpen?: boolean;
 }) {
-  return (
-    <section className="rounded-xl border bg-background p-5">
-      <div className="mb-5">
-        <h3 className="font-display text-base font-semibold">{title}</h3>
-        {description && (
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-        )}
-      </div>
+  if (!when) return null;
 
-      <div className="grid gap-5">{children}</div>
-    </section>
+  return (
+    <details
+      open={defaultOpen}
+      className="group rounded-xl border bg-background p-5 [&_summary::-webkit-details-marker]:hidden"
+    >
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-4">
+        <div>
+          <h3 className="font-display text-base font-semibold">{title}</h3>
+          {description && (
+            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          )}
+        </div>
+        <span className="text-muted-foreground transition group-open:rotate-180">
+          ▼
+        </span>
+      </summary>
+
+      <div className="mt-5 grid gap-5">{children}</div>
+    </details>
   );
+}
+
+export type DeliveryKind =
+  | "account"
+  | "subscription"
+  | "license"
+  | "voucher"
+  | "download"
+  | "other";
+
+/** Derive the delivery kind from the free-text product type already in use. */
+function deriveDeliveryKind(productType: string): DeliveryKind {
+  const t = productType.toLowerCase();
+  if (/licen[cs]e|key|activation|software|windows|office/.test(t))
+    return "license";
+  if (/voucher|redeem|gift|coupon|pin|top ?up|code/.test(t)) return "voucher";
+  if (/download|file|template|pdf|ebook|e-book|zip|asset|digital/.test(t))
+    return "download";
+  if (/subscription|plan|shared|monthly|premium|netflix|spotify/.test(t))
+    return "subscription";
+  if (/account|login|profile|facebook|gmail|instagram|tiktok/.test(t))
+    return "account";
+  return "other";
 }
 
 function Page() {
