@@ -395,6 +395,19 @@ function Page() {
   const suppliers = (query.data?.suppliers ?? []) as Supplier[];
   const inventory = (query.data?.inventory ?? []) as InventoryItem[];
 
+  // Which fields the form shows is driven by the delivery kind.
+  const kind: DeliveryKind =
+    deliveryOverride ||
+    deriveDeliveryKind(`${draft.product_type} ${draft.product_name}`);
+
+  const isAccountLike = kind === "account" || kind === "subscription";
+  const secretLabel =
+    kind === "license"
+      ? "License Key"
+      : kind === "voucher"
+        ? "Voucher Code / PIN"
+        : "Password";
+
   const setField = <K extends keyof Draft>(field: K, value: Draft[K]) => {
     setDraft((current) => ({
       ...current,
