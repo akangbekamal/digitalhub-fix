@@ -945,7 +945,8 @@ function Page() {
                   />
                 </Field>
 
-                <Field label="Email Access URL">
+                {(isAccountLike || kind === "other") && (
+<Field label="Email Access URL">
                   <Input
                     value={draft.email_access_url}
                     onChange={(e) =>
@@ -954,16 +955,20 @@ function Page() {
                     placeholder="https://..."
                   />
                 </Field>
+)}
 
-                <Field label="Login URL">
+                {(isAccountLike || kind === "other") && (
+<Field label="Login URL">
                   <Input
                     value={draft.login_url}
                     onChange={(e) => setField("login_url", e.target.value)}
                     placeholder="https://..."
                   />
                 </Field>
+)}
 
-                <Field label="Activation URL">
+                {(kind === "license" || kind === "other") && (
+<Field label="Activation URL">
                   <Input
                     value={draft.activation_url}
                     onChange={(e) =>
@@ -972,8 +977,10 @@ function Page() {
                     placeholder="https://..."
                   />
                 </Field>
+)}
 
-                <Field label="Download URL">
+                {(kind === "download" || kind === "other") && (
+<Field label="Download URL">
                   <Input
                     value={draft.download_url}
                     onChange={(e) =>
@@ -982,6 +989,7 @@ function Page() {
                     placeholder="https://..."
                   />
                 </Field>
+)}
               </div>
 
               <div className="rounded-lg border p-4">
