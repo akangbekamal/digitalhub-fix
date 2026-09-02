@@ -372,6 +372,10 @@ function Page() {
   const [showForm, setShowForm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [showFormPassword, setShowFormPassword] = useState(false);
+  // "" = automatic, derived from the product type.
+  const [deliveryOverride, setDeliveryOverride] = useState<"" | DeliveryKind>(
+    "",
+  );
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>(
     {},
   );
