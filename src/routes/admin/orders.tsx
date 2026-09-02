@@ -1042,15 +1042,29 @@ const sendDeliveryEmail = async () => {
                         ? inventory.error.message
                         : "Failed to load inventory."}
                     </div>
-                  ) : (inventory.data ?? [])
-                      .length === 0 ? (
+                  ) : visibleInventory.length === 0 ? (
                     <div className="rounded-lg border p-4 text-sm text-muted-foreground">
-                      No available digital
-                      inventory.
+                      {showAllInventory ? (
+                        "No available digital inventory."
+                      ) : (
+                        <>
+                          No available inventory matches
+                          this order&apos;s products.{" "}
+                          <button
+                            type="button"
+                            className="underline"
+                            onClick={() =>
+                              setShowAllInventory(true)
+                            }
+                          >
+                            Show all available inventory
+                          </button>
+                        </>
+                      )}
                     </div>
                   ) : (
                     <div className="grid gap-3">
-                      {(inventory.data ?? []).map(
+                      {visibleInventory.map(
                         (item: any) => (
                           <button
                             key={item.id}

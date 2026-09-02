@@ -304,23 +304,61 @@ function Section({
   title,
   description,
   children,
+  when = true,
+  defaultOpen = false,
 }: {
   title: string;
   description?: string;
   children: React.ReactNode;
+  /** Hide the whole section when it is irrelevant for the delivery type. */
+  when?: boolean;
+  defaultOpen?: boolean;
 }) {
-  return (
-    <section className="rounded-xl border bg-background p-5">
-      <div className="mb-5">
-        <h3 className="font-display text-base font-semibold">{title}</h3>
-        {description && (
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-        )}
-      </div>
+  if (!when) return null;
 
-      <div className="grid gap-5">{children}</div>
-    </section>
+  return (
+    <details
+      open={defaultOpen}
+      className="group rounded-xl border bg-background p-5 [&_summary::-webkit-details-marker]:hidden"
+    >
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-4">
+        <div>
+          <h3 className="font-display text-base font-semibold">{title}</h3>
+          {description && (
+            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          )}
+        </div>
+        <span className="text-muted-foreground transition group-open:rotate-180">
+          ▼
+        </span>
+      </summary>
+
+      <div className="mt-5 grid gap-5">{children}</div>
+    </details>
   );
+}
+
+export type DeliveryKind =
+  | "account"
+  | "subscription"
+  | "license"
+  | "voucher"
+  | "download"
+  | "other";
+
+/** Derive the delivery kind from the free-text product type already in use. */
+function deriveDeliveryKind(productType: string): DeliveryKind {
+  const t = productType.toLowerCase();
+  if (/licen[cs]e|key|activation|software|windows|office/.test(t))
+    return "license";
+  if (/voucher|redeem|gift|coupon|pin|top ?up|code/.test(t)) return "voucher";
+  if (/download|file|template|pdf|ebook|e-book|zip|asset|digital/.test(t))
+    return "download";
+  if (/subscription|plan|shared|monthly|premium|netflix|spotify/.test(t))
+    return "subscription";
+  if (/account|login|profile|facebook|gmail|instagram|tiktok/.test(t))
+    return "account";
+  return "other";
 }
 
 function Page() {
@@ -334,6 +372,10 @@ function Page() {
   const [showForm, setShowForm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [showFormPassword, setShowFormPassword] = useState(false);
+  // "" = automatic, derived from the product type.
+  const [deliveryOverride, setDeliveryOverride] = useState<"" | DeliveryKind>(
+    "",
+  );
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>(
     {},
   );
@@ -352,6 +394,19 @@ function Page() {
   const products = (query.data?.products ?? []) as Product[];
   const suppliers = (query.data?.suppliers ?? []) as Supplier[];
   const inventory = (query.data?.inventory ?? []) as InventoryItem[];
+
+  // Which fields the form shows is driven by the delivery kind.
+  const kind: DeliveryKind =
+    deliveryOverride ||
+    deriveDeliveryKind(`${draft.product_type} ${draft.product_name}`);
+
+  const isAccountLike = kind === "account" || kind === "subscription";
+  const secretLabel =
+    kind === "license"
+      ? "License Key"
+      : kind === "voucher"
+        ? "Voucher Code / PIN"
+        : "Password";
 
   const setField = <K extends keyof Draft>(field: K, value: Draft[K]) => {
     setDraft((current) => ({
@@ -677,6 +732,7 @@ function Page() {
           <form onSubmit={save} className="mt-6 grid gap-5">
             {/* BASIC INFORMATION */}
             <Section
+              defaultOpen
               title="📦 Basic Information"
               description="Identify the actual stock item and the product it belongs to."
             >
@@ -727,6 +783,27 @@ function Page() {
                   />
                 </Field>
 
+                <Field label="Delivery Type (controls the form)">
+                  <select
+                    value={deliveryOverride}
+                    onChange={(e) =>
+                      setDeliveryOverride(
+                        e.target.value as "" | DeliveryKind,
+                      )
+                    }
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="">Automatic ({kind})</option>
+                    <option value="account">Account</option>
+                    <option value="subscription">Subscription</option>
+                    <option value="license">License Key</option>
+                    <option value="voucher">Voucher / Code</option>
+                    <option value="download">Digital Download</option>
+                    <option value="other">Other / All fields</option>
+                  </select>
+                </Field>
+
+
                 <Field label="Category">
                   <Input
                     value={draft.product_category}
@@ -758,10 +835,19 @@ function Page() {
 
             {/* CREDENTIALS */}
             <Section
-              title="🔐 Credentials"
-              description="Sensitive account information. Staff/admin only."
+              defaultOpen
+              when={kind !== "download"}
+              title={
+                kind === "license"
+                  ? "🔐 License"
+                  : kind === "voucher"
+                    ? "🔐 Voucher"
+                    : "🔐 Credentials"
+              }
+              description="Sensitive information. Staff/admin only."
             >
               <div className="grid gap-5 md:grid-cols-2">
+                {(isAccountLike || kind === "other") && (
                 <Field label="Email / Number">
                   <Input
                     value={draft.account_email}
@@ -771,7 +857,9 @@ function Page() {
                     placeholder="account@example.com"
                   />
                 </Field>
+                )}
 
+                {(isAccountLike || kind === "other") && (
                 <Field label="Username">
                   <Input
                     value={draft.account_username}
@@ -781,8 +869,9 @@ function Page() {
                     placeholder="Username"
                   />
                 </Field>
+                )}
 
-                <Field label="Password">
+                <Field label={secretLabel}>
                   <div className="relative">
                     <Input
                       type={showFormPassword ? "text" : "password"}
@@ -814,6 +903,7 @@ function Page() {
                   </div>
                 </Field>
 
+                {(isAccountLike || kind === "other") && (
                 <Field label="2FA Information">
                   <Input
                     value={draft.two_fa_info}
@@ -823,7 +913,9 @@ function Page() {
                     placeholder="2FA details"
                   />
                 </Field>
+                )}
 
+                {(isAccountLike || kind === "other") && (
                 <Field label="Recovery Information" className="md:col-span-2">
                   <Textarea
                     value={draft.recovery_info}
@@ -834,11 +926,13 @@ function Page() {
                     placeholder="Recovery email, recovery codes, phone, etc."
                   />
                 </Field>
+                )}
               </div>
             </Section>
 
             {/* ACCESS */}
             <Section
+              when={kind !== "voucher"}
               title="🔗 QR & Access"
               description="Store the URLs customers may need after delivery."
             >
@@ -851,7 +945,8 @@ function Page() {
                   />
                 </Field>
 
-                <Field label="Email Access URL">
+                {(isAccountLike || kind === "other") && (
+<Field label="Email Access URL">
                   <Input
                     value={draft.email_access_url}
                     onChange={(e) =>
@@ -860,16 +955,20 @@ function Page() {
                     placeholder="https://..."
                   />
                 </Field>
+)}
 
-                <Field label="Login URL">
+                {(isAccountLike || kind === "other") && (
+<Field label="Login URL">
                   <Input
                     value={draft.login_url}
                     onChange={(e) => setField("login_url", e.target.value)}
                     placeholder="https://..."
                   />
                 </Field>
+)}
 
-                <Field label="Activation URL">
+                {(kind === "license" || kind === "other") && (
+<Field label="Activation URL">
                   <Input
                     value={draft.activation_url}
                     onChange={(e) =>
@@ -878,8 +977,10 @@ function Page() {
                     placeholder="https://..."
                   />
                 </Field>
+)}
 
-                <Field label="Download URL">
+                {(kind === "download" || kind === "other") && (
+<Field label="Download URL">
                   <Input
                     value={draft.download_url}
                     onChange={(e) =>
@@ -888,6 +989,7 @@ function Page() {
                     placeholder="https://..."
                   />
                 </Field>
+)}
               </div>
 
               <div className="rounded-lg border p-4">
@@ -969,7 +1071,10 @@ function Page() {
             </Section>
 
             {/* ACCOUNT */}
-            <Section title="📋 Account">
+            <Section
+              when={isAccountLike || kind === "other"}
+              title="📋 Plan & Validity"
+            >
               <div className="grid gap-5 md:grid-cols-2">
                 <Field label="Plan / Package">
                   <Input
@@ -1046,7 +1151,7 @@ function Page() {
             </Section>
 
             {/* STOCK */}
-            <Section title="📦 Stock">
+            <Section defaultOpen title="📦 Stock & Pricing">
               <div className="grid gap-5 md:grid-cols-3">
                 <Field label="Status">
                   <select
@@ -1229,7 +1334,10 @@ function Page() {
             </Section>
 
             {/* WARRANTY */}
-            <Section title="🛡️ Warranty">
+            <Section
+              when={kind !== "voucher"}
+              title="🛡️ Warranty"
+            >
               <div className="grid gap-5 md:grid-cols-2">
                 <Field label="Warranty Period">
                   <Input
