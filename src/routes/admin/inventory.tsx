@@ -732,6 +732,7 @@ function Page() {
           <form onSubmit={save} className="mt-6 grid gap-5">
             {/* BASIC INFORMATION */}
             <Section
+              defaultOpen
               title="📦 Basic Information"
               description="Identify the actual stock item and the product it belongs to."
             >
@@ -834,10 +835,19 @@ function Page() {
 
             {/* CREDENTIALS */}
             <Section
-              title="🔐 Credentials"
-              description="Sensitive account information. Staff/admin only."
+              defaultOpen
+              when={kind !== "download"}
+              title={
+                kind === "license"
+                  ? "🔐 License"
+                  : kind === "voucher"
+                    ? "🔐 Voucher"
+                    : "🔐 Credentials"
+              }
+              description="Sensitive information. Staff/admin only."
             >
               <div className="grid gap-5 md:grid-cols-2">
+                {(isAccountLike || kind === "other") && (
                 <Field label="Email / Number">
                   <Input
                     value={draft.account_email}
@@ -847,7 +857,9 @@ function Page() {
                     placeholder="account@example.com"
                   />
                 </Field>
+                )}
 
+                {(isAccountLike || kind === "other") && (
                 <Field label="Username">
                   <Input
                     value={draft.account_username}
@@ -857,8 +869,9 @@ function Page() {
                     placeholder="Username"
                   />
                 </Field>
+                )}
 
-                <Field label="Password">
+                <Field label={secretLabel}>
                   <div className="relative">
                     <Input
                       type={showFormPassword ? "text" : "password"}
@@ -890,6 +903,7 @@ function Page() {
                   </div>
                 </Field>
 
+                {(isAccountLike || kind === "other") && (
                 <Field label="2FA Information">
                   <Input
                     value={draft.two_fa_info}
@@ -899,7 +913,9 @@ function Page() {
                     placeholder="2FA details"
                   />
                 </Field>
+                )}
 
+                {(isAccountLike || kind === "other") && (
                 <Field label="Recovery Information" className="md:col-span-2">
                   <Textarea
                     value={draft.recovery_info}
@@ -910,11 +926,13 @@ function Page() {
                     placeholder="Recovery email, recovery codes, phone, etc."
                   />
                 </Field>
+                )}
               </div>
             </Section>
 
             {/* ACCESS */}
             <Section
+              when={kind !== "voucher"}
               title="🔗 QR & Access"
               description="Store the URLs customers may need after delivery."
             >
@@ -1045,7 +1063,10 @@ function Page() {
             </Section>
 
             {/* ACCOUNT */}
-            <Section title="📋 Account">
+            <Section
+              when={isAccountLike || kind === "other"}
+              title="📋 Plan & Validity"
+            >
               <div className="grid gap-5 md:grid-cols-2">
                 <Field label="Plan / Package">
                   <Input
@@ -1122,7 +1143,7 @@ function Page() {
             </Section>
 
             {/* STOCK */}
-            <Section title="📦 Stock">
+            <Section defaultOpen title="📦 Stock & Pricing">
               <div className="grid gap-5 md:grid-cols-3">
                 <Field label="Status">
                   <select
@@ -1305,7 +1326,10 @@ function Page() {
             </Section>
 
             {/* WARRANTY */}
-            <Section title="🛡️ Warranty">
+            <Section
+              when={kind !== "voucher"}
+              title="🛡️ Warranty"
+            >
               <div className="grid gap-5 md:grid-cols-2">
                 <Field label="Warranty Period">
                   <Input
