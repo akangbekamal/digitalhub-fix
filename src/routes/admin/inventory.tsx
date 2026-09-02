@@ -782,6 +782,27 @@ function Page() {
                   />
                 </Field>
 
+                <Field label="Delivery Type (controls the form)">
+                  <select
+                    value={deliveryOverride}
+                    onChange={(e) =>
+                      setDeliveryOverride(
+                        e.target.value as "" | DeliveryKind,
+                      )
+                    }
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="">Automatic ({kind})</option>
+                    <option value="account">Account</option>
+                    <option value="subscription">Subscription</option>
+                    <option value="license">License Key</option>
+                    <option value="voucher">Voucher / Code</option>
+                    <option value="download">Digital Download</option>
+                    <option value="other">Other / All fields</option>
+                  </select>
+                </Field>
+
+
                 <Field label="Category">
                   <Input
                     value={draft.product_category}
