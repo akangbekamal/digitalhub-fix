@@ -623,12 +623,12 @@ const sendDeliveryEmail = async () => {
                   className="surface-panel p-4"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <p className="font-display font-semibold">
                         {p.orders?.order_number}
                       </p>
 
-                      <p className="text-sm text-muted-foreground">
+                      <p className="break-words text-sm text-muted-foreground">
                         {p.orders?.customer_name} ·{" "}
                         {p.orders?.customer_phone}
                       </p>
@@ -651,7 +651,7 @@ const sendDeliveryEmail = async () => {
                       </p>
                     </div>
 
-                    <div className="text-right">
+                    <div className="shrink-0 text-right">
                       <p className="font-display text-lg font-bold text-primary">
                         {money(p.amount)}
                       </p>
@@ -820,7 +820,7 @@ const sendDeliveryEmail = async () => {
                       </p>
                     </div>
 
-                    <div className="flex flex-col items-end gap-2">
+                    <div className="w-full items-stretch gap-2 sm:flex sm:w-auto sm:flex-col sm:items-end">
                       <span className="font-display text-lg font-bold text-primary">
                         {money(o.total)}
                       </span>
@@ -869,7 +869,7 @@ const sendDeliveryEmail = async () => {
                         }
                       >
                         <SelectTrigger
-                          className="w-48"
+                          className="mt-2 w-full sm:mt-0 sm:w-48"
                           aria-label="Order status"
                         >
                           <SelectValue />
@@ -898,6 +898,7 @@ const sendDeliveryEmail = async () => {
                       </Select>
 
                       <Button
+                        className="mt-2 w-full sm:mt-0 sm:w-auto"
                         size="sm"
                         onClick={() => {
                           setDeliveryOrder(
@@ -929,8 +930,8 @@ const sendDeliveryEmail = async () => {
       ================================================== */}
 
       {deliveryOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border bg-background p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 sm:p-4">
+          <div className="max-h-[95vh] w-full max-w-2xl overflow-y-auto rounded-xl border bg-background p-4 shadow-xl sm:max-h-[90vh] sm:p-6">
             {/* HEADER */}
 
             <div className="flex items-start justify-between gap-4">

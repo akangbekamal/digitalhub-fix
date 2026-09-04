@@ -24,7 +24,7 @@ function Row({ line }: { line: CartLine }) {
   const image = useImageUrl(line.imageUrl);
   const { setQty, remove } = useCart();
   return (
-    <div className="surface-panel flex items-center gap-4 p-4">
+    <div className="surface-panel grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 p-4 sm:flex sm:gap-4">
       <div className="size-16 shrink-0 overflow-hidden rounded-xl bg-muted">
         {image && <img src={image} alt={line.name} className="size-full object-cover" />}
       </div>
@@ -34,19 +34,21 @@ function Row({ line }: { line: CartLine }) {
         </Link>
         <p className="text-sm text-muted-foreground">{money(line.price)} each</p>
       </div>
-      <div className="flex items-center rounded-lg border border-border">
-        <button className="px-2.5 py-1.5" aria-label="Decrease" onClick={() => setQty(line.productId, line.quantity - 1)}>
-          −
-        </button>
-        <span className="w-8 text-center text-sm font-semibold">{line.quantity}</span>
-        <button className="px-2.5 py-1.5" aria-label="Increase" onClick={() => setQty(line.productId, line.quantity + 1)}>
-          +
-        </button>
+      <div className="col-span-2 flex min-w-0 items-center justify-between gap-2 sm:contents">
+        <div className="flex shrink-0 items-center rounded-lg border border-border">
+          <button className="min-h-10 px-3 py-1.5" aria-label="Decrease" onClick={() => setQty(line.productId, line.quantity - 1)}>
+            −
+          </button>
+          <span className="w-8 text-center text-sm font-semibold">{line.quantity}</span>
+          <button className="min-h-10 px-3 py-1.5" aria-label="Increase" onClick={() => setQty(line.productId, line.quantity + 1)}>
+            +
+          </button>
+        </div>
+        <p className="min-w-0 text-right font-semibold sm:w-24">{money(line.price * line.quantity)}</p>
+        <Button variant="ghost" size="icon" className="size-10 shrink-0 sm:size-9" aria-label={`Remove ${line.name}`} onClick={() => remove(line.productId)}>
+          <Trash2 className="size-4" />
+        </Button>
       </div>
-      <p className="hidden w-24 text-right font-semibold sm:block">{money(line.price * line.quantity)}</p>
-      <Button variant="ghost" size="icon" aria-label={`Remove ${line.name}`} onClick={() => remove(line.productId)}>
-        <Trash2 className="size-4" />
-      </Button>
     </div>
   );
 }

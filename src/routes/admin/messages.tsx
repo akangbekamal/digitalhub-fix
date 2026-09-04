@@ -125,12 +125,14 @@ function Page() {
       </p>
 
       <Tabs defaultValue="templates" className="mt-6">
-        <TabsList>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="automation">Automation</TabsTrigger>
-          <TabsTrigger value="generator">Generator</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
-        </TabsList>
+        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <TabsList>
+            <TabsTrigger value="templates">Templates</TabsTrigger>
+            <TabsTrigger value="automation">Automation</TabsTrigger>
+            <TabsTrigger value="generator">Generator</TabsTrigger>
+            <TabsTrigger value="history">History</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="templates" className="mt-4">
           <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
@@ -284,7 +286,7 @@ function Page() {
               <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-lg bg-muted px-3 py-2 text-sm">
                 {preview.body}
               </pre>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
                   variant="outline"
                   onClick={() => void navigator.clipboard.writeText(`${preview.subject}\n\n${preview.body}`)}

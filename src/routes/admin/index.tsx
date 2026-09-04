@@ -107,7 +107,7 @@ function Page() {
       <section className="surface-panel mt-8 p-5">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="font-display text-lg font-semibold">Performance</h2>
-          <div className="ml-auto flex flex-wrap gap-2">
+          <div className="flex w-full flex-wrap gap-2 sm:ml-auto sm:w-auto">
             {PRESETS.map((p) => (
               <Button key={p} size="sm" variant={preset === p ? "default" : "outline"} onClick={() => setPreset(p)}>
                 {p}
@@ -116,10 +116,10 @@ function Page() {
           </div>
         </div>
         {preset === "Custom" && (
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
-            <Input type="date" className="w-auto" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
+          <div className="mt-3 grid gap-2 text-sm sm:flex sm:flex-wrap sm:items-center">
+            <Input type="date" className="w-full sm:w-auto" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
             <span className="text-muted-foreground">to</span>
-            <Input type="date" className="w-auto" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
+            <Input type="date" className="w-full sm:w-auto" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
           </div>
         )}
         <div className="mt-4 grid gap-4 sm:grid-cols-3 xl:grid-cols-6">

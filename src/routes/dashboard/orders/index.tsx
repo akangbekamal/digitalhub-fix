@@ -57,16 +57,16 @@ function Page() {
                       {(o.order_items ?? []).map((i) => `${i.quantity} × ${i.product_name}`).join(", ")}
                     </p>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
+                  <div className="w-full items-stretch gap-2 sm:flex sm:w-auto sm:flex-col sm:items-end">
                     <span className="font-display text-lg font-bold text-primary">{money(o.total)}</span>
-                    <div className="flex flex-wrap justify-end gap-2">
+                    <div className="mt-2 flex flex-wrap gap-2 sm:mt-0 sm:justify-end">
                       <StatusBadge status={o.status} label={ORDER_STATUS_LABELS[o.status] ?? o.status} />
                       <StatusBadge
                         status={o.payment_status}
                         label={`Payment: ${PAYMENT_STATUS_LABELS[o.payment_status] ?? o.payment_status}`}
                       />
                     </div>
-                    <Button asChild size="sm" variant={o.payment_status === "pending" ? "default" : "outline"}>
+                    <Button asChild size="sm" className="mt-2 w-full sm:mt-0 sm:w-auto" variant={o.payment_status === "pending" ? "default" : "outline"}>
                       <Link to="/dashboard/orders/$id" params={{ id: o.id }}>
                         {o.payment_status === "pending" ? "Submit payment" : "View order"}
                       </Link>

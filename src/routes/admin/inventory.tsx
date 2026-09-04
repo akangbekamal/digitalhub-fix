@@ -319,7 +319,7 @@ function Section({
   return (
     <details
       open={defaultOpen}
-      className="group rounded-xl border bg-background p-5 [&_summary::-webkit-details-marker]:hidden"
+      className="group rounded-xl border bg-background p-4 sm:p-5 [&_summary::-webkit-details-marker]:hidden"
     >
       <summary className="flex cursor-pointer list-none items-start justify-between gap-4">
         <div>
@@ -665,6 +665,7 @@ function Page() {
         </div>
 
         <Button
+          className="w-full sm:w-auto"
           onClick={() => {
             setDraft(EMPTY);
             setShowForm(true);
@@ -705,7 +706,7 @@ function Page() {
       </div>
 
       {showForm && (
-        <section className="surface-panel mt-6 p-5">
+        <section className="surface-panel mt-6 p-4 sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="font-display text-lg font-semibold">
@@ -993,8 +994,8 @@ function Page() {
               </div>
 
               <div className="rounded-lg border p-4">
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
                     <p className="font-medium">Additional Links</p>
                     <p className="text-sm text-muted-foreground">
                       Add multiple named access links.
@@ -1016,7 +1017,7 @@ function Page() {
                   {draft.access_links.map((link, index) => (
                     <div
                       key={index}
-                      className="grid gap-3 rounded-lg bg-muted/30 p-3 md:grid-cols-[1fr_150px_2fr_auto]"
+                      className="grid gap-3 rounded-lg bg-muted/30 p-3 lg:grid-cols-[1fr_minmax(120px,150px)_2fr_auto]"
                     >
                       <Input
                         value={link.link_name}
@@ -1450,7 +1451,7 @@ function Page() {
               </div>
             </Section>
 
-            <div className="flex flex-wrap justify-end gap-2">
+            <div className="grid gap-2 sm:flex sm:flex-wrap sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
@@ -1503,7 +1504,7 @@ function Page() {
             const passwordVisible = Boolean(showPasswords[item.id]);
 
             return (
-              <section key={item.id} className="surface-panel p-5">
+              <section key={item.id} className="surface-panel p-4 sm:p-5">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -1530,7 +1531,7 @@ function Page() {
                     </p>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="grid gap-2 sm:flex">
                     <Button
                       variant="outline"
                       size="sm"

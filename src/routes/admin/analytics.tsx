@@ -72,9 +72,9 @@ function Page() {
         ))}
         {preset === "Custom" && (
           <>
-            <Input type="date" className="w-auto" value={from} onChange={(e) => setFrom(e.target.value)} />
+            <Input type="date" className="w-full sm:w-auto" value={from} onChange={(e) => setFrom(e.target.value)} />
             <span className="text-sm text-muted-foreground">to</span>
-            <Input type="date" className="w-auto" value={to} onChange={(e) => setTo(e.target.value)} />
+            <Input type="date" className="w-full sm:w-auto" value={to} onChange={(e) => setTo(e.target.value)} />
           </>
         )}
       </div>
