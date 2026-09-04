@@ -127,7 +127,7 @@ function Page() {
             <p className="text-muted-foreground">{product.delivery_info}</p>
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <div className="flex items-center rounded-xl border border-border">
               <button
                 type="button"
@@ -149,6 +149,7 @@ function Page() {
             </div>
             <Button
               size="lg"
+              className="w-full sm:w-auto"
               disabled={soldOut}
               onClick={() => {
                 add(
@@ -167,7 +168,7 @@ function Page() {
               <ShoppingCart className="mr-2 size-4" aria-hidden />
               {soldOut ? "Sold out" : "Add to cart"}
             </Button>
-            <Button asChild size="lg" variant="outline">
+            <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
               <Link to="/cart">View cart</Link>
             </Button>
           </div>

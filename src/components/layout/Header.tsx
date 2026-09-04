@@ -67,7 +67,7 @@ export function Header() {
       <div className="container-page flex h-16 items-center gap-3">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open menu">
+            <Button variant="ghost" size="icon" className="size-10 shrink-0 lg:hidden" aria-label="Open menu">
               <Menu className="size-5" />
             </Button>
           </SheetTrigger>
@@ -135,7 +135,9 @@ export function Header() {
           </SheetContent>
         </Sheet>
 
-        <Logo />
+        <div className="min-w-0 shrink">
+          <Logo />
+        </div>
 
         <nav className="ml-4 hidden items-center gap-1 lg:flex">
           {NAV.map((item) => (
@@ -165,13 +167,13 @@ export function Header() {
         </form>
 
         <div className="ml-auto flex items-center gap-1 md:ml-0">
-          <Button variant="ghost" size="icon" className="md:hidden" asChild aria-label="Search">
+          <Button variant="ghost" size="icon" className="size-10 shrink-0 md:hidden" asChild aria-label="Search">
             <Link to="/shop">
               <Search className="size-5" />
             </Link>
           </Button>
 
-          <Button variant="ghost" size="icon" asChild aria-label={`Cart, ${count} items`}>
+          <Button variant="ghost" size="icon" className="size-10 shrink-0 md:size-9" asChild aria-label={`Cart, ${count} items`}>
             <Link to="/cart" className="relative">
               <ShoppingCart className="size-5" />
               {count > 0 && (
@@ -184,7 +186,7 @@ export function Header() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Account menu">
+              <Button variant="ghost" size="icon" className="size-10 shrink-0 md:size-9" aria-label="Account menu">
                 <UserIcon className="size-5" />
               </Button>
             </DropdownMenuTrigger>

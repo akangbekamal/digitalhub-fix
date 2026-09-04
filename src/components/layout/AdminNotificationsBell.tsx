@@ -64,7 +64,7 @@ export function AdminNotificationsBell() {
       </button>
 
       {open && (
-        <div className="absolute z-30 mt-2 max-h-80 w-72 overflow-y-auto rounded-xl border border-border bg-card p-2 shadow-lg">
+        <div className="absolute z-30 mt-2 max-h-80 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border border-border bg-card p-2 shadow-lg">
           {rows.length === 0 ? (
             <p className="p-3 text-sm text-muted-foreground">No notifications yet.</p>
           ) : (

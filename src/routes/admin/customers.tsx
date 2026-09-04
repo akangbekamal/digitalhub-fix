@@ -74,10 +74,10 @@ function Page() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search name, email or phone"
-          className="max-w-sm"
+          className="w-full sm:max-w-sm"
         />
         <Select value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
-          <SelectTrigger className="w-44" aria-label="Filter by status">
+          <SelectTrigger className="w-full sm:w-44" aria-label="Filter by status">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -101,23 +101,23 @@ function Page() {
         ) : (
           <ul className="space-y-2">
             {rows.map((c) => (
-              <li key={c.id} className="surface-panel flex flex-wrap items-center justify-between gap-3 p-4">
-                <div className="min-w-0">
+              <li key={c.id} className="surface-panel flex flex-col items-stretch gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                <div className="min-w-0 flex-1">
                   <p className="font-medium">
                     {c.full_name || "Unnamed"}{" "}
                     {c.account_status !== "active" && (
                       <span className="text-xs text-destructive">({c.account_status})</span>
                     )}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="break-words text-xs text-muted-foreground">
                     {c.email ?? "—"} · {c.phone ?? "—"} · joined {shortDate(c.created_at)} ·{" "}
                     {c.roles.join(", ") || "customer"}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="grid w-full gap-2 sm:flex sm:w-auto sm:items-center">
                   {isSuperAdmin && (
                     <Select value={c.roles[0] ?? "customer"} onValueChange={(v) => void changeRole(c.id, v as (typeof ROLES)[number])}>
-                      <SelectTrigger className="w-44" aria-label={`Role for ${c.full_name}`}>
+                      <SelectTrigger className="w-full sm:w-44" aria-label={`Role for ${c.full_name}`}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -133,7 +133,7 @@ function Page() {
                     value={c.account_status}
                     onValueChange={(v) => void changeStatus(c.id, v as "active" | "suspended" | "deactivated")}
                   >
-                    <SelectTrigger className="w-40" aria-label={`Status for ${c.full_name}`}>
+                    <SelectTrigger className="w-full sm:w-40" aria-label={`Status for ${c.full_name}`}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

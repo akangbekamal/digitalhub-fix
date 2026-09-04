@@ -235,24 +235,24 @@ function Page() {
               {payment?.method_name || "Mobile Money payment"}
             </h2>
             <dl className="mt-4 space-y-2 text-sm">
-              <div className="flex justify-between gap-4">
+               <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-4">
                 <dt className="text-muted-foreground">Payment method</dt>
-                <dd className="font-semibold">{payment?.method_name || "Mobile Money"}</dd>
+                 <dd className="min-w-0 break-words text-right font-semibold">{payment?.method_name || "Mobile Money"}</dd>
               </div>
-              <div className="flex justify-between gap-4">
+               <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-4">
                 <dt className="text-muted-foreground">Account holder</dt>
-                <dd className="font-semibold">
+                 <dd className="min-w-0 break-words text-right font-semibold">
                   {payment?.account_name || payment?.momo_name || "DIGITAL HUB GH"}
                 </dd>
               </div>
-              <div className="flex justify-between gap-4">
+               <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-4">
                 <dt className="text-muted-foreground">Payment number</dt>
-                <dd className="font-semibold text-primary">{payment?.momo_number || "—"}</dd>
+                 <dd className="min-w-0 break-all text-right font-semibold text-primary">{payment?.momo_number || "—"}</dd>
               </div>
               {(payment?.momo_networks ?? []).length > 0 && (
-                <div className="flex justify-between gap-4">
+                 <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-4">
                   <dt className="text-muted-foreground">Networks</dt>
-                  <dd className="font-medium">{(payment?.momo_networks ?? []).join(", ")}</dd>
+                   <dd className="min-w-0 break-words text-right font-medium">{(payment?.momo_networks ?? []).join(", ")}</dd>
                 </div>
               )}
             </dl>
@@ -306,7 +306,7 @@ function Page() {
               <Button
                 type="button"
                 variant="outline"
-                className="mt-4"
+                className="mt-4 w-full sm:w-auto"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <ImageUp className="mr-2 size-4" aria-hidden /> Choose image
@@ -329,7 +329,7 @@ function Page() {
             ))}
           </ul>
 
-          <div className="mt-4 flex gap-2">
+           <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <Input
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
