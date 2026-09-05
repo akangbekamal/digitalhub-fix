@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -47,6 +47,35 @@ export type Database = {
         }
         Relationships: []
       }
+      announcement_dismissals: {
+        Row: {
+          announcement_id: string
+          dismissed_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          announcement_id: string
+          dismissed_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string
+          dismissed_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_dismissals_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       announcement_reads: {
         Row: {
           announcement_id: string
@@ -78,48 +107,162 @@ export type Database = {
       }
       announcements: {
         Row: {
+          archived_at: string | null
           audience: string
           created_at: string
+          created_by: string | null
+          cta_click_count: number
+          cta_text: string | null
+          cta_url: string | null
+          dismiss_count: number
+          dismissible: boolean
+          display_scope: string
           ends_at: string | null
           id: string
           is_published: boolean
           link_label: string | null
           link_url: string | null
           message: string
+          notification_channels: string[]
+          notified_at: string | null
+          notified_count: number
+          pinned: boolean
           placement: string
+          placements: string[]
+          popup_frequency: string
           priority: number
+          priority_level: string
+          published_at: string | null
+          published_by: string | null
           starts_at: string | null
+          status: string
+          target_category_ids: string[]
+          target_product_ids: string[]
+          target_provider_tags: string[]
           title: string
+          type: string
           updated_at: string
+          updated_by: string | null
+          view_count: number
         }
         Insert: {
+          archived_at?: string | null
           audience?: string
           created_at?: string
+          created_by?: string | null
+          cta_click_count?: number
+          cta_text?: string | null
+          cta_url?: string | null
+          dismiss_count?: number
+          dismissible?: boolean
+          display_scope?: string
           ends_at?: string | null
           id?: string
           is_published?: boolean
           link_label?: string | null
           link_url?: string | null
           message: string
+          notification_channels?: string[]
+          notified_at?: string | null
+          notified_count?: number
+          pinned?: boolean
           placement?: string
+          placements?: string[]
+          popup_frequency?: string
           priority?: number
+          priority_level?: string
+          published_at?: string | null
+          published_by?: string | null
           starts_at?: string | null
+          status?: string
+          target_category_ids?: string[]
+          target_product_ids?: string[]
+          target_provider_tags?: string[]
           title: string
+          type?: string
           updated_at?: string
+          updated_by?: string | null
+          view_count?: number
         }
         Update: {
+          archived_at?: string | null
           audience?: string
           created_at?: string
+          created_by?: string | null
+          cta_click_count?: number
+          cta_text?: string | null
+          cta_url?: string | null
+          dismiss_count?: number
+          dismissible?: boolean
+          display_scope?: string
           ends_at?: string | null
           id?: string
           is_published?: boolean
           link_label?: string | null
           link_url?: string | null
           message?: string
+          notification_channels?: string[]
+          notified_at?: string | null
+          notified_count?: number
+          pinned?: boolean
           placement?: string
+          placements?: string[]
+          popup_frequency?: string
           priority?: number
+          priority_level?: string
+          published_at?: string | null
+          published_by?: string | null
           starts_at?: string | null
+          status?: string
+          target_category_ids?: string[]
+          target_product_ids?: string[]
+          target_provider_tags?: string[]
           title?: string
+          type?: string
+          updated_at?: string
+          updated_by?: string | null
+          view_count?: number
+        }
+        Relationships: []
+      }
+      automation_rules: {
+        Row: {
+          action: string
+          audience: string
+          created_at: string
+          id: string
+          is_enabled: boolean
+          last_triggered_at: string | null
+          name: string
+          template_key: string | null
+          trigger_count: number
+          trigger_event: string
+          updated_at: string
+        }
+        Insert: {
+          action?: string
+          audience?: string
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          last_triggered_at?: string | null
+          name: string
+          template_key?: string | null
+          trigger_count?: number
+          trigger_event: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          audience?: string
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          last_triggered_at?: string | null
+          name?: string
+          template_key?: string | null
+          trigger_count?: number
+          trigger_event?: string
           updated_at?: string
         }
         Relationships: []
@@ -258,6 +401,7 @@ export type Database = {
           order_id: string | null
           product_name: string
           sent_at: string | null
+          updated_at: string
         }
         Insert: {
           created_at?: string
@@ -269,6 +413,7 @@ export type Database = {
           order_id?: string | null
           product_name: string
           sent_at?: string | null
+          updated_at?: string
         }
         Update: {
           created_at?: string
@@ -280,6 +425,7 @@ export type Database = {
           order_id?: string | null
           product_name?: string
           sent_at?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -787,6 +933,60 @@ export type Database = {
           },
         ]
       }
+      message_history: {
+        Row: {
+          body: string | null
+          channel: string
+          created_at: string
+          customer_id: string | null
+          error_message: string | null
+          id: string
+          message_type: string
+          metadata: Json
+          order_id: string | null
+          recipient: string | null
+          sender: string
+          sent_at: string | null
+          status: string
+          subject: string | null
+          template_key: string | null
+        }
+        Insert: {
+          body?: string | null
+          channel?: string
+          created_at?: string
+          customer_id?: string | null
+          error_message?: string | null
+          id?: string
+          message_type: string
+          metadata?: Json
+          order_id?: string | null
+          recipient?: string | null
+          sender?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template_key?: string | null
+        }
+        Update: {
+          body?: string | null
+          channel?: string
+          created_at?: string
+          customer_id?: string | null
+          error_message?: string | null
+          id?: string
+          message_type?: string
+          metadata?: Json
+          order_id?: string | null
+          recipient?: string | null
+          sender?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template_key?: string | null
+        }
+        Relationships: []
+      }
       message_logs: {
         Row: {
           body: string | null
@@ -838,6 +1038,72 @@ export type Database = {
           status?: string
           subject?: string | null
           template_key?: string | null
+        }
+        Relationships: []
+      }
+      message_templates: {
+        Row: {
+          audience: string
+          body: string
+          channel: string
+          created_at: string
+          id: string
+          is_active: boolean
+          key: string
+          name: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          body?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key: string
+          name: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          body?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key?: string
+          name?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notification_events: {
+        Row: {
+          event_key: string
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string
+          reference_id: string | null
+        }
+        Insert: {
+          event_key: string
+          event_type: string
+          id?: string
+          payload?: Json
+          processed_at?: string
+          reference_id?: string | null
+        }
+        Update: {
+          event_key?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string
+          reference_id?: string | null
         }
         Relationships: []
       }
@@ -1121,6 +1387,7 @@ export type Database = {
           image_url: string | null
           is_active: boolean
           is_featured: boolean
+          low_stock_threshold: number
           name: string
           price: number
           product_type: string
@@ -1148,6 +1415,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           is_featured?: boolean
+          low_stock_threshold?: number
           name: string
           price?: number
           product_type?: string
@@ -1175,6 +1443,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           is_featured?: boolean
+          low_stock_threshold?: number
           name?: string
           price?: number
           product_type?: string
@@ -1593,6 +1862,10 @@ export type Database = {
         Args: { p_inventory_id: string; p_order_id: string }
         Returns: boolean
       }
+      track_announcement_event: {
+        Args: { _announcement_id: string; _event: string }
+        Returns: undefined
+      }
       update_expired_inventory_warranties: { Args: never; Returns: number }
     }
     Enums: {
@@ -1618,12 +1891,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1647,11 +1920,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1672,11 +1945,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1697,11 +1970,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1714,11 +1987,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1741,3 +2014,4 @@ export const Constants = {
     },
   },
 } as const
+
