@@ -6,6 +6,7 @@ import { LoadingState } from "@/components/StateBlocks";
 import { useAuth } from "@/hooks/useAuth";
 import { myDownloadsQuery, myNotificationsQuery, myOrdersQuery } from "@/lib/account";
 import { money, shortDate } from "@/lib/format";
+import { AnnouncementSlot } from "@/components/announcements/AnnouncementNotice";
 
 export const Route = createFileRoute("/dashboard/")({
   head: () => ({
@@ -44,6 +45,8 @@ function Page() {
         Welcome{profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}
       </h1>
       <p className="mt-2 text-muted-foreground">Here is what is happening with your account.</p>
+
+      <AnnouncementSlot placement="dashboard" className="mt-6" />
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((s) => (

@@ -149,51 +149,10 @@ function Page() {
           )}
         </TabsContent>
 
-        <TabsContent value="news" className="mt-4 space-y-4">
-          <form onSubmit={addAnnouncement} className="surface-panel space-y-4 p-5">
-            <div>
-              <Label htmlFor="title">Title</Label>
-              <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
-            </div>
-            <div>
-              <Label htmlFor="message">Message</Label>
-              <Textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} required />
-            </div>
-            <Button type="submit">
-              <Megaphone className="mr-2 size-4" aria-hidden /> Publish
-            </Button>
-          </form>
-
-          {announcements.isLoading ? (
-            <LoadingState rows={2} />
-          ) : (
-            <ul className="space-y-2">
-              {(announcements.data ?? []).map((a) => (
-                <li key={a.id} className="surface-panel flex flex-wrap items-center justify-between gap-3 p-4">
-                  <div className="min-w-0">
-                    <p className="font-medium">{a.title}</p>
-                    <p className="text-sm text-muted-foreground">{a.message}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{dateTime(a.created_at)}</p>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={async () => {
-                      try {
-                        const res = await runBroadcast({ data: { announcementId: a.id } });
-                        toast.success(`Sent to ${res.sent} customers`);
-                      } catch (err) {
-                        toast.error((err as Error).message);
-                      }
-                    }}
-                  >
-                    Notify all customers
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
+        <TabsContent value="news" className="mt-4">
+          <AnnouncementManager />
         </TabsContent>
+
       </Tabs>
     </div>
   );

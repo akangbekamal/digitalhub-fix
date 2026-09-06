@@ -14,6 +14,7 @@ import { money } from "@/lib/format";
 import { placeOrder, validateCoupon } from "@/lib/store.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AnnouncementSlot } from "@/components/announcements/AnnouncementNotice";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_PROOF_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -198,6 +199,8 @@ function Page() {
     <main className="container-page py-12">
       <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">Checkout</h1>
       <p className="mt-2 text-muted-foreground">Confirm your details, then pay with Mobile Money.</p>
+
+      <AnnouncementSlot placement="checkout" className="mt-6" />
 
       <form onSubmit={submit} className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="space-y-6">

@@ -10,6 +10,7 @@ import { useImageUrl } from "@/hooks/useImageUrl";
 import { useCart } from "@/hooks/useCart";
 import { effectivePrice, money, shortDate } from "@/lib/format";
 import { toast } from "sonner";
+import { AnnouncementSlot } from "@/components/announcements/AnnouncementNotice";
 
 export const Route = createFileRoute("/product/$slug")({
   head: ({ params }) => {
@@ -76,6 +77,15 @@ function Page() {
 
   return (
     <main className="container-page py-10">
+      <AnnouncementSlot
+        placement="product"
+        className="mb-6"
+        context={{
+          productId: product.id,
+          categoryId: product.category_id ?? undefined,
+          providerTags: product.tags,
+        }}
+      />
       <Link to="/shop" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-4" aria-hidden /> Back to shop
       </Link>
