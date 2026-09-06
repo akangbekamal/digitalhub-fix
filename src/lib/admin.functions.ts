@@ -812,12 +812,13 @@ export const broadcastAnnouncement = createServerFn({ method: "POST" })
     if (channels.includes("email") && emailConfigured()) {
       for (const p of recipients) {
         if (!p.email) continue;
-        const ok = await sendBrevoEmail({
+        const res = await sendBrevoEmail({
           to: p.email,
           subject: a.title,
           html: `<p>${a.message.replace(/\n/g, "<br/>")}</p>`,
+          log: { type: "announcement", trigger: "announcement_broadcast", channel: "email" },
         });
-        if (ok) emailed += 1;
+        if (res.ok) emailed += 1;
       }
     }
 
