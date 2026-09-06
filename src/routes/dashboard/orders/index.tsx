@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/hooks/useAuth";
 import { myOrdersQuery } from "@/lib/account";
 import { ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS, dateTime, money } from "@/lib/format";
+import { AnnouncementSlot } from "@/components/announcements/AnnouncementNotice";
 
 export const Route = createFileRoute("/dashboard/orders/")({
   head: () => ({
@@ -29,6 +30,8 @@ function Page() {
     <div>
       <h1 className="font-display text-3xl font-bold tracking-tight">My orders</h1>
       <p className="mt-2 text-muted-foreground">Track every order and complete its Mobile Money payment.</p>
+
+      <AnnouncementSlot placement="orders" className="mt-6" />
 
       <div className="mt-6">
         {orders.isLoading ? (

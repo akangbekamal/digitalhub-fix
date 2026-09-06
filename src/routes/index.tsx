@@ -6,6 +6,7 @@ import { ProductCard } from "@/components/store/ProductCard";
 import { EmptyState, ErrorState, LoadingState } from "@/components/StateBlocks";
 import { categoriesQuery, productsQuery } from "@/lib/catalog";
 import { useSettings } from "@/hooks/useSettings";
+import { AnnouncementSlot } from "@/components/announcements/AnnouncementNotice";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -45,6 +46,7 @@ function Index() {
 
   return (
     <main>
+      <AnnouncementSlot placement="homepage" className="container-page pt-6" />
       <section className="hero-glow border-b border-border/60">
         <div className="container-page grid gap-10 py-16 lg:grid-cols-2 lg:items-center lg:py-24">
           <div>

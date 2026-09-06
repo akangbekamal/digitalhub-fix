@@ -17,6 +17,7 @@ import { ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS, dateTime, money } from "@/l
 import { requestRefund, submitPaymentProof } from "@/lib/store.functions";
 import { getProofUrl } from "@/lib/downloads.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { AnnouncementSlot } from "@/components/announcements/AnnouncementNotice";
 
 export const Route = createFileRoute("/dashboard/orders/$id")({
   head: () => ({
@@ -134,6 +135,8 @@ function Page() {
       >
         <ArrowLeft className="size-4" aria-hidden /> Back to orders
       </Link>
+
+      <AnnouncementSlot placement="order" className="mt-4" />
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <div>
