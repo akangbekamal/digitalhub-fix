@@ -816,7 +816,7 @@ export const broadcastAnnouncement = createServerFn({ method: "POST" })
           to: p.email,
           subject: a.title,
           html: `<p>${a.message.replace(/\n/g, "<br/>")}</p>`,
-          log: { type: "announcement", trigger: "announcement_broadcast", channel: "email" },
+          log: { message_type: "announcement", customer_id: p.id, source: "manual", sent_by: adminId, dedupe_key: `announcement:${a.id}:${p.id}` },
         });
         if (res.ok) emailed += 1;
       }
