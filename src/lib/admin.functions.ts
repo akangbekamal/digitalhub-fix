@@ -723,14 +723,18 @@ export const setUserRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Publishing an announcement can also push it to customers' notification centre. */
+/**
+ * Publishing an announcement can also push it to customers' notification
+ * centre and, when requested, their email. Recipients follow the announcement's
+ * own audience rule — never "everyone" by default.
+ */
 export const broadcastAnnouncement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ announcementId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const adminId = await requireStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { logAdminAction } = await import("./notify.server");
+    const { logAdminAction, sendBrevoEmail, emailConfigured } = await import("./notify.server");
 
     const { data: announcement } = await supabaseAdmin
       .from("announcements")
@@ -739,25 +743,102 @@ export const broadcastAnnouncement = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!announcement) throw new Error("Announcement not found.");
 
-    const { data: profiles } = await supabaseAdmin.from("profiles").select("id");
-    const rows = (profiles ?? []).map((p) => ({
-      user_id: p.id,
-      title: announcement.title,
-      body: announcement.message,
-      type: "announcement",
-      link: announcement.link_url ?? "/",
-    }));
-    if (rows.length) await supabaseAdmin.from("notifications").insert(rows);
+    const a = announcement as unknown as {
+      id: string;
+      title: string;
+      message: string;
+      audience: string | null;
+      link_url: string | null;
+      cta_url: string | null;
+      notification_channels: string[] | null;
+      target_product_ids: string[] | null;
+    };
+
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("id, email, created_at")
+      .limit(20000);
+    let recipients = (profiles ?? []) as { id: string; email: string | null; created_at: string }[];
+
+    if (a.audience === "new_customers") {
+      const cutoff = Date.now() - 30 * 86_400_000;
+      recipients = recipients.filter((p) => new Date(p.created_at).getTime() >= cutoff);
+    } else if (a.audience === "active_orders" || a.audience === "service_customers") {
+      let q = supabaseAdmin.from("orders").select("user_id, product_ids:id").limit(20000);
+      if (a.audience === "active_orders") {
+        q = supabaseAdmin
+          .from("orders")
+          .select("user_id")
+          .not("status", "in", "(delivered,cancelled,refunded,completed)")
+          .limit(20000);
+      } else {
+        q = supabaseAdmin.from("orders").select("user_id, order_items(product_id)").limit(20000);
+      }
+      const { data: orders } = await q;
+      const targets = a.target_product_ids ?? [];
+      const ids = new Set<string>();
+      for (const o of (orders ?? []) as {
+        user_id: string | null;
+        order_items?: { product_id: string | null }[];
+      }[]) {
+        if (!o.user_id) continue;
+        if (a.audience === "service_customers" && targets.length) {
+          const hit = (o.order_items ?? []).some((i) => i.product_id && targets.includes(i.product_id));
+          if (!hit) continue;
+        }
+        ids.add(o.user_id);
+      }
+      recipients = recipients.filter((p) => ids.has(p.id));
+    }
+
+    const channels = a.notification_channels ?? [];
+    const wantsInApp = channels.length === 0 || channels.includes("inapp");
+    const link = a.cta_url ?? a.link_url ?? "/dashboard/notifications";
+
+    let sent = 0;
+    if (wantsInApp && recipients.length) {
+      const rows = recipients.map((p) => ({
+        user_id: p.id,
+        title: a.title,
+        body: a.message,
+        type: "announcement",
+        link,
+      }));
+      await supabaseAdmin.from("notifications").insert(rows);
+      sent = rows.length;
+    }
+
+    let emailed = 0;
+    if (channels.includes("email") && emailConfigured()) {
+      for (const p of recipients) {
+        if (!p.email) continue;
+        const ok = await sendBrevoEmail({
+          to: p.email,
+          subject: a.title,
+          html: `<p>${a.message.replace(/\n/g, "<br/>")}</p>`,
+        });
+        if (ok) emailed += 1;
+      }
+    }
+
+    await supabaseAdmin
+      .from("announcements")
+      .update({
+        notified_at: new Date().toISOString(),
+        notified_count: Math.max(sent, emailed),
+      } as never)
+      .eq("id", a.id);
 
     await logAdminAction({
       adminId,
       action: "announcement_broadcast",
       targetType: "announcement",
-      targetId: announcement.id,
-      description: `Sent to ${rows.length} customers`,
+      targetId: a.id,
+      description: `In-app: ${sent}, email: ${emailed}`,
     });
-    return { sent: rows.length };
+    return { sent: Math.max(sent, emailed), emailed };
   });
+
 /** Reserve a digital inventory item for an existing order. */
 export const reserveDigitalInventoryForOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
