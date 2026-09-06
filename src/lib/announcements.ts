@@ -205,7 +205,7 @@ export function matchesContext(a: Announcement, ctx: AnnouncementContext) {
 
 /** Live announcements for one placement, already filtered for this visitor. */
 export function useAnnouncements(placement: Placement, ctx: AnnouncementContext = {}) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [dismissed, setDismissed] = useState<string[]>([]);
 
   useEffect(() => setDismissed(localDismissed()), []);
@@ -256,7 +256,7 @@ export function useAnnouncements(placement: Placement, ctx: AnnouncementContext 
     },
   });
 
-  const createdAt = useAuth().profile?.created_at as string | undefined;
+  const createdAt = (profile as { created_at?: string } | null)?.created_at;
 
   return useMemo(() => {
     const all = query.data ?? [];
