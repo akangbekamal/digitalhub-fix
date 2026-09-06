@@ -764,17 +764,21 @@ export const broadcastAnnouncement = createServerFn({ method: "POST" })
       const cutoff = Date.now() - 30 * 86_400_000;
       recipients = recipients.filter((p) => new Date(p.created_at).getTime() >= cutoff);
     } else if (a.audience === "active_orders" || a.audience === "service_customers") {
-      let q = supabaseAdmin.from("orders").select("user_id, product_ids:id").limit(20000);
-      if (a.audience === "active_orders") {
-        q = supabaseAdmin
-          .from("orders")
-          .select("user_id")
-          .not("status", "in", "(delivered,cancelled,refunded,completed)")
-          .limit(20000);
-      } else {
-        q = supabaseAdmin.from("orders").select("user_id, order_items(product_id)").limit(20000);
-      }
-      const { data: orders } = await q;
+      const orders =
+        a.audience === "active_orders"
+          ? (
+              await supabaseAdmin
+                .from("orders")
+                .select("user_id")
+                .not("status", "in", "(delivered,cancelled,refunded,completed)")
+                .limit(20000)
+            ).data
+          : (
+              await supabaseAdmin
+                .from("orders")
+                .select("user_id, order_items(product_id)")
+                .limit(20000)
+            ).data;
       const targets = a.target_product_ids ?? [];
       const ids = new Set<string>();
       for (const o of (orders ?? []) as {
