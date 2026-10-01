@@ -9,6 +9,7 @@ import { myNotificationsQuery } from "@/lib/account";
 import { dateTime } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { AnnouncementSlot } from "@/components/announcements/AnnouncementNotice";
 
 export const Route = createFileRoute("/dashboard/notifications")({
   head: () => ({
@@ -74,7 +75,10 @@ function Page() {
         )}
       </div>
 
+      <AnnouncementSlot placement="notification" className="mt-6" />
+
       <div className="mt-6">
+
         {query.isLoading ? (
           <LoadingState label="Loading notifications…" />
         ) : query.isError ? (

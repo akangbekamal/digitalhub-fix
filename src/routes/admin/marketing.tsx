@@ -1,19 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Megaphone, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingState } from "@/components/StateBlocks";
-import { adminAnnouncementsQuery, adminCouponsQuery } from "@/lib/admin-data";
-import { dateTime, money } from "@/lib/format";
-import { broadcastAnnouncement } from "@/lib/admin.functions";
+import { adminCouponsQuery } from "@/lib/admin-data";
+import { AnnouncementManager } from "@/components/admin/AnnouncementManager";
+import { money } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/marketing")({
@@ -33,15 +31,11 @@ export const Route = createFileRoute("/admin/marketing")({
 function Page() {
   const qc = useQueryClient();
   const coupons = useQuery(adminCouponsQuery());
-  const announcements = useQuery(adminAnnouncementsQuery());
-  const runBroadcast = useServerFn(broadcastAnnouncement);
 
   const [code, setCode] = useState("");
   const [type, setType] = useState("percent");
   const [value, setValue] = useState("10");
   const [minOrder, setMinOrder] = useState("0");
-  const [title, setTitle] = useState("");
-  const [message, setMessage] = useState("");
 
   const addCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,21 +53,6 @@ function Page() {
     setCode("");
     toast.success("Coupon created");
     await qc.invalidateQueries({ queryKey: ["admin-coupons"] });
-  };
-
-  const addAnnouncement = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { error } = await supabase
-      .from("announcements")
-      .insert({ title: title.trim(), message: message.trim(), audience: "all", placement: "banner", is_published: true });
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    setTitle("");
-    setMessage("");
-    toast.success("Announcement published");
-    await qc.invalidateQueries({ queryKey: ["admin-announcements"] });
   };
 
   return (
