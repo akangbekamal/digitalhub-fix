@@ -9,6 +9,7 @@ import { myNotificationsQuery } from "@/lib/account";
 import { dateTime } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { AnnouncementSlot } from "@/components/announcements/AnnouncementNotice";
 
 export const Route = createFileRoute("/dashboard/notifications")({
   head: () => ({
