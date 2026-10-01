@@ -75,7 +75,10 @@ function Page() {
         )}
       </div>
 
+      <AnnouncementSlot placement="notification" className="mt-6" />
+
       <div className="mt-6">
+
         {query.isLoading ? (
           <LoadingState label="Loading notifications…" />
         ) : query.isError ? (
