@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.18"
   }
   public: {
     Tables: {
@@ -540,7 +540,7 @@ export type Database = {
           product_id?: string | null
           product_name: string
           product_sku?: string | null
-          product_type: string
+          product_type?: string
           profit?: number | null
           purchase_date?: string | null
           purchase_reference?: string | null
@@ -626,6 +626,13 @@ export type Database = {
           warranty_status?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "digital_inventory_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "digital_inventory_product_id_fkey"
             columns: ["product_id"]
@@ -985,7 +992,15 @@ export type Database = {
           subject?: string | null
           template_key?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "message_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       message_logs: {
         Row: {
@@ -1039,7 +1054,15 @@ export type Database = {
           subject?: string | null
           template_key?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "message_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       message_templates: {
         Row: {
@@ -1158,7 +1181,7 @@ export type Database = {
           order_id: string
           product_id?: string | null
           product_name: string
-          quantity?: number
+          quantity: number
           unit_price: number
         }
         Update: {
@@ -1417,7 +1440,7 @@ export type Database = {
           is_featured?: boolean
           low_stock_threshold?: number
           name: string
-          price?: number
+          price: number
           product_type?: string
           rating_avg?: number
           rating_count?: number
@@ -1510,7 +1533,15 @@ export type Database = {
           referred_by?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       referrals: {
         Row: {
@@ -1787,20 +1818,20 @@ export type Database = {
       user_roles: {
         Row: {
           created_at: string
-          id: number
-          role: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
           created_at?: string
-          id?: number
-          role?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
           created_at?: string
-          id?: number
-          role?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
         Relationships: []
@@ -1851,9 +1882,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_staff:
-        | { Args: never; Returns: boolean }
-        | { Args: { _user_id: string }; Returns: boolean }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
       release_digital_inventory: {
         Args: { p_order_id: string }
         Returns: number
@@ -2014,4 +2043,3 @@ export const Constants = {
     },
   },
 } as const
-
