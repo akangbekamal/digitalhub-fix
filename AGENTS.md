@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Customer dashboard phone presentation uses the existing dashboard layout and overview with `sm`-scoped variants; hide the shared storefront header only for signed-in non-staff dashboard visits below `sm` to avoid duplicate headers while preserving other pages and desktop.
