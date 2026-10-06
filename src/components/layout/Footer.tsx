@@ -1,16 +1,24 @@
 import { SocialLinks } from "@/components/SocialLinks";
 import { whatsappLink, useSettings } from "@/hooks/useSettings";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 import { Mail, MessageCircle, Phone } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 
 export function Footer() {
   const { store } = useSettings();
+  const { user, isStaff } = useAuth();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const customerDashboard = Boolean(user && !isStaff && (pathname === "/dashboard" || pathname.startsWith("/dashboard/")));
+  const [linksOpen, setLinksOpen] = useState(false);
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-20 border-t border-border bg-surface">
-      <div className="container-page grid gap-10 py-12 md:grid-cols-2 lg:grid-cols-4">
+    <footer className={`${customerDashboard ? "mt-6 sm:mt-20" : "mt-20"} border-t border-border bg-surface`}>
+      {customerDashboard && <div className="container-page pt-2 sm:hidden"><Button variant="ghost" size="sm" className="w-full" aria-expanded={linksOpen} aria-controls="dashboard-footer-links" onClick={() => setLinksOpen(!linksOpen)}>{linksOpen ? "Fewer links" : "More links"}</Button></div>}
+      <div id="dashboard-footer-links" className={`container-page ${customerDashboard && !linksOpen ? "hidden sm:grid" : "grid"} gap-10 py-12 md:grid-cols-2 lg:grid-cols-4`}>
         {/* Brand / Social */}
         <div className="space-y-4">
           <Logo />
