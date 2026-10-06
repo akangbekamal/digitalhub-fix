@@ -6,5 +6,5 @@
 - [x] Confirm build remains clean and no business logic changed.
 
 ## Compact customer phone dashboard
-- [ ] Compact customer-only header, navigation, statistics, actions and recent orders; preserve desktop/admin.
-- [ ] Verify 320, 375, 390, 414 and 430px plus desktop; report any authenticated-testing blocker.
+- [x] Compact customer-only header, navigation, statistics, actions and recent orders; preserve desktop/admin.
+- [x] Verify 320, 375, 390, 414 and 430px plus desktop with isolated browser layout fixtures: no overflow, menu works, Orders quick action opens the order list, no page errors. Live customer-session testing unavailable; no authentication or backend changes made.
