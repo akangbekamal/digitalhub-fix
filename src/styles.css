@@ -204,4 +204,13 @@
   .admin-content .overflow-x-auto { max-width: 100%; }
   .admin-mobile > details { overflow-wrap: anywhere; font-size: 0.625rem; }
   .admin-drawer { overflow-wrap: anywhere; }
+  .admin-content .admin-mobile-table { display: block; min-width: 0; width: 100%; }
+  .admin-mobile-table thead { display: none; }
+  .admin-mobile-table tbody { display: block; }
+  .admin-mobile-table tr { display: block; padding-block: 0.625rem; }
+  .admin-mobile-table td { display: grid; grid-template-columns: 4.5rem minmax(0,1fr); gap: 0.5rem; padding: 0.25rem; max-width: none; white-space: normal; text-align: left; overflow-wrap: anywhere; font-size: 0.75rem; }
+  .admin-mobile-table td::before { content: attr(data-label); color: var(--muted-foreground); font-size: 0.625rem; }
+  .admin-mobile-table td[colspan] { display: block; }
+  .admin-mobile-table td[colspan]::before { content: none; }
+  .admin-mobile-table td:empty { display: none; }
 }
