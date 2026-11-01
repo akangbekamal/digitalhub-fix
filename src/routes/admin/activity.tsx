@@ -47,7 +47,7 @@ function Page() {
           <EmptyState title="No activity recorded yet" description="Admin actions will appear here as they happen." />
         ) : (
           <div className="surface-panel overflow-x-auto">
-            <table className="w-full min-w-[720px] text-sm">
+            <table className="admin-mobile-table w-full min-w-[720px] text-sm">
               <thead className="text-left text-xs uppercase text-muted-foreground">
                 <tr>
                   <th className="p-3">Date</th>
@@ -60,11 +60,11 @@ function Page() {
               <tbody>
                 {(query.data ?? []).map((r) => (
                   <tr key={r.id} className="border-t border-border align-top">
-                    <td className="p-3 whitespace-nowrap">{dateTime(r.created_at)}</td>
-                    <td>{r.actor}</td>
-                    <td className="capitalize">{r.action.replace(/_/g, " ")}</td>
-                    <td className="text-muted-foreground">{r.target_type ?? "—"}</td>
-                    <td className="max-w-[280px] text-muted-foreground">{r.description ?? "—"}</td>
+                    <td data-label="Date" className="p-3 whitespace-nowrap">{dateTime(r.created_at)}</td>
+                    <td data-label="Admin">{r.actor}</td>
+                    <td data-label="Action" className="capitalize">{r.action.replace(/_/g, " ")}</td>
+                    <td data-label="Target" className="text-muted-foreground">{r.target_type ?? "—"}</td>
+                    <td data-label="Details" className="max-w-[280px] text-muted-foreground">{r.description ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>

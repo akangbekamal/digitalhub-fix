@@ -136,22 +136,22 @@ function Page() {
 
         <TabsContent value="templates" className="mt-4">
           <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
-            <ul className="surface-panel max-h-[520px] space-y-1 overflow-y-auto p-2">
+            <ul className="surface-panel max-h-40 space-y-1 overflow-y-auto p-2 sm:max-h-[520px]">
               {templates.map((t) => (
                 <li key={t.key}>
-                  <button
+                  <Button variant="ghost"
                     type="button"
                     onClick={() => {
                       setActiveKey(t.key);
                       setDraft(null);
                     }}
-                    className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted ${
+                    className={`h-auto w-full justify-start whitespace-normal rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted ${
                       t.key === active.key ? "bg-muted font-medium" : ""
                     }`}
                   >
                     {t.label}
                     {t.customised && <span className="ml-2 text-xs text-muted-foreground">edited</span>}
-                  </button>
+                  </Button>
                 </li>
               ))}
             </ul>
@@ -175,7 +175,7 @@ function Page() {
               </label>
               <div className="flex flex-wrap gap-1">
                 {MESSAGE_VARIABLES.map((v) => (
-                  <button
+                  <Button variant="outline" size="sm"
                     key={v}
                     type="button"
                     className="rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted"
@@ -184,7 +184,7 @@ function Page() {
                     }
                   >
                     {`{{${v}}}`}
-                  </button>
+                  </Button>
                 ))}
               </div>
               <Button
@@ -335,7 +335,7 @@ function Page() {
           </div>
 
           <div className="surface-panel mt-4 overflow-x-auto">
-            <table className="w-full min-w-[820px] text-sm">
+            <table className="admin-mobile-table w-full min-w-[820px] text-sm">
               <thead className="text-left text-xs uppercase text-muted-foreground">
                 <tr>
                   <th className="p-3">Date</th>
@@ -357,16 +357,16 @@ function Page() {
                 ) : (
                   logs.map((l) => (
                     <tr key={l.id} className="border-t border-border align-top">
-                      <td className="p-3 whitespace-nowrap">{dateTime(l.created_at)}</td>
-                      <td className="capitalize">{l.message_type.replace(/_/g, " ")}</td>
-                      <td className="max-w-[180px] truncate">{l.recipient ?? "—"}</td>
-                      <td className="max-w-[240px] truncate">{l.subject ?? "—"}</td>
-                      <td className="capitalize">{l.source}</td>
-                      <td>
+                      <td data-label="Date" className="p-3 whitespace-nowrap">{dateTime(l.created_at)}</td>
+                      <td data-label="Type" className="capitalize">{l.message_type.replace(/_/g, " ")}</td>
+                      <td data-label="Recipient" className="max-w-[180px] truncate">{l.recipient ?? "—"}</td>
+                      <td data-label="Subject" className="max-w-[240px] truncate">{l.subject ?? "—"}</td>
+                      <td data-label="Source" className="capitalize">{l.source}</td>
+                      <td data-label="Status">
                         <StatusBadge status={l.status} />
                         {l.error && <p className="mt-1 max-w-[220px] text-xs text-destructive">{l.error}</p>}
                       </td>
-                      <td className="p-3 text-right">
+                      <td data-label="Action" className="p-3 text-right">
                         {l.status === "failed" && (
                           <Button size="sm" variant="outline" onClick={() => retry.mutate({ data: { id: l.id } })}>
                             Retry

@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, Plus, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,9 @@ const EMPTY: Draft = {
 };
 
 function Page() {
+  const section = useRouterState({ select: (s) => s.location.hash });
+  const [tab, setTab] = useState("products");
+  useEffect(() => { if (section === "categories" || section === "products") setTab(section); }, [section]);
   const qc = useQueryClient();
   const products = useQuery(adminProductsQuery());
   const categories = useQuery(adminCategoriesQuery());
@@ -133,7 +136,7 @@ function Page() {
       <h1 className="font-display text-3xl font-bold tracking-tight">Catalog</h1>
       <p className="mt-2 text-muted-foreground">Manage your products, pricing, stock and categories.</p>
 
-      <Tabs defaultValue="products" className="mt-6">
+      <Tabs value={tab} onValueChange={setTab} className="mt-6">
         <TabsList>
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
@@ -235,7 +238,7 @@ function Page() {
                 Featured
               </label>
             </div>
-            <div className="flex gap-2 sm:col-span-2">
+            <div className="sticky bottom-0 z-10 -mx-3 flex flex-wrap gap-2 border-t border-border bg-card px-3 py-3 sm:static sm:col-span-2 sm:mx-0 sm:border-0 sm:p-0">
               <Button type="submit" disabled={busy}>
                 {busy ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Save className="mr-2 size-4" aria-hidden />}
                 {draft.id ? "Save product" : "Create product"}
@@ -324,8 +327,8 @@ function Page() {
           <ul className="space-y-2">
             {(categories.data ?? []).map((c) => (
               <li key={c.id} className="surface-panel flex items-center justify-between gap-3 p-4">
-                <span className="font-medium">{c.name}</span>
-                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="min-w-0 break-words font-medium">{c.name}</span>
+                <label className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground">
                   Active
                   <Switch
                     checked={c.is_active}

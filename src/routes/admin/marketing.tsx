@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,9 @@ export const Route = createFileRoute("/admin/marketing")({
 });
 
 function Page() {
+  const section = useRouterState({ select: (s) => s.location.hash });
+  const [tab, setTab] = useState("coupons");
+  useEffect(() => { if (section === "coupons" || section === "news") setTab(section); }, [section]);
   const qc = useQueryClient();
   const coupons = useQuery(adminCouponsQuery());
 
@@ -60,7 +63,7 @@ function Page() {
       <h1 className="font-display text-3xl font-bold tracking-tight">Coupons & announcements</h1>
       <p className="mt-2 text-muted-foreground">Discounts are validated on the server at checkout.</p>
 
-      <Tabs defaultValue="coupons" className="mt-6">
+      <Tabs value={tab} onValueChange={setTab} className="mt-6">
         <TabsList>
           <TabsTrigger value="coupons">Coupons</TabsTrigger>
           <TabsTrigger value="news">Announcements</TabsTrigger>
