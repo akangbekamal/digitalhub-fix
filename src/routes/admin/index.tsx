@@ -8,6 +8,9 @@ import { ErrorState, LoadingState } from "@/components/StateBlocks";
 import { getAdminStats } from "@/lib/admin.functions";
 import { money, shortDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { PackagePlus, Receipt, CreditCard, Database, Users, LifeBuoy, ArrowUpRight } from "lucide-react";
+import { StatusBadge } from "@/components/StatusBadge";
+import { AdminNotificationsBell } from "@/components/layout/AdminNotificationsBell";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({
@@ -95,7 +98,14 @@ function Page() {
       <h1 className="font-display text-3xl font-bold tracking-tight">Overview</h1>
       <p className="mt-2 text-muted-foreground">Live figures straight from your store database.</p>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:hidden">
+        {[{ label: "Total Sales", value: money(s.revenue) }, { label: "Orders", value: String(s.totalOrders) }, { label: "Customers", value: String(s.customers) }, { label: "Pending Orders", value: String(s.pendingOrders) }].map((c) => <div key={c.label} className="min-w-0 rounded-md border border-border bg-card px-3 py-2.5"><p className="text-xs text-muted-foreground">{c.label}</p><p className="mt-1 break-words font-display text-lg font-bold">{c.value}</p></div>)}
+      </div>
+      <nav aria-label="Admin quick actions" className="mt-3 grid grid-cols-3 gap-2 sm:hidden">
+        {[{ to: "/admin/products", label: "Add Product", icon: PackagePlus }, { to: "/admin/orders", hash: "orders", label: "View Orders", icon: Receipt }, { to: "/admin/orders", hash: "verify", label: "Payments", icon: CreditCard }, { to: "/admin/inventory", label: "Inventory", icon: Database }, { to: "/admin/customers", label: "Customers", icon: Users }, { to: "/admin/support", label: "Support", icon: LifeBuoy }].map((a) => <Button key={a.label} asChild variant="outline" className="h-11 min-w-0 gap-1.5 px-1 text-[11px]"><Link to={a.to} hash={a.hash}><a.icon className="size-3.5 shrink-0" />{a.label}</Link></Button>)}
+      </nav>
+      <details className="mt-3 sm:hidden"><summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-muted-foreground">More store metrics</summary><dl className="grid grid-cols-2 gap-3 border-t border-border py-3">{cards.map((c) => <div key={c.label} className="min-w-0"><dt className="text-xs text-muted-foreground">{c.label}</dt><dd className="break-words text-sm font-semibold">{c.value}</dd></div>)}</dl></details>
+      <div className="mt-6 hidden gap-4 sm:grid sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((c) => (
           <div key={c.label} className="surface-panel p-4">
             <p className="text-sm text-muted-foreground">{c.label}</p>
@@ -104,7 +114,7 @@ function Page() {
         ))}
       </div>
 
-      <section className="surface-panel mt-8 p-5">
+      <section className="surface-panel mt-8 hidden p-5 sm:block">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="font-display text-lg font-semibold">Performance</h2>
           <div className="flex w-full flex-wrap gap-2 sm:ml-auto sm:w-auto">
@@ -139,7 +149,7 @@ function Page() {
         </div>
       </section>
 
-      <section className="surface-panel mt-8 p-5">
+      <section className="surface-panel mt-8 hidden p-5 sm:block">
         <h2 className="font-display text-lg font-semibold">Revenue — last 30 days</h2>
         <div className="mt-4 flex h-32 items-end gap-1">
           {s.revenueSeries.map((d) => (
@@ -154,11 +164,12 @@ function Page() {
       </section>
 
       <section className="surface-panel mt-8 p-5">
-        <h2 className="font-display text-lg font-semibold">Recent orders</h2>
+        <div className="flex items-center justify-between gap-2"><h2 className="font-display text-lg font-semibold">Recent orders</h2><Button asChild variant="ghost" size="sm" className="sm:hidden"><Link to="/admin/orders" hash="orders">View all<ArrowUpRight className="ml-1 size-3" /></Link></Button></div>
+        <ul className="mt-2 divide-y divide-border sm:hidden">{s.recentOrders.slice(0, 4).map((o) => <li key={o.id} className="py-2.5"><Link to="/admin/orders" hash="orders" className="grid grid-cols-[minmax(0,1fr)_auto] gap-2"><div className="min-w-0"><p className="truncate text-sm font-semibold">{o.order_number}</p><p className="truncate text-xs text-muted-foreground">{o.customer_name}</p><p className="mt-1 text-[10px] text-muted-foreground">{shortDate(o.created_at)} · {o.status.replace(/_/g, " ")}</p></div><div className="text-right"><p className="mb-1 text-sm font-semibold">{money(o.total)}</p><StatusBadge status={o.payment_status} /></div></Link><details className="mt-1"><summary className="cursor-pointer py-1 text-[10px] text-muted-foreground">Products</summary><p className="break-words text-xs">{o.products}</p></details></li>)}</ul>
         {s.recentOrders.length === 0 ? (
           <p className="mt-3 text-sm text-muted-foreground">No orders yet.</p>
         ) : (
-          <div className="mt-3 overflow-x-auto">
+          <div className="mt-3 hidden overflow-x-auto sm:block">
             <table className="w-full min-w-[720px] text-sm">
               <thead className="text-left text-xs uppercase text-muted-foreground">
                 <tr>
@@ -195,6 +206,12 @@ function Page() {
             </table>
           </div>
         )}
+      </section>
+
+      <section className="mt-4 border-t border-border pt-3 sm:hidden">
+        <div className="flex items-center justify-between"><h2 className="text-sm font-semibold">Pending payments</h2><Button asChild variant="ghost" size="sm"><Link to="/admin/orders" hash="verify">Check<ArrowUpRight className="ml-1 size-3" /></Link></Button></div>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center py-2 text-sm"><span className="text-muted-foreground">Awaiting verification</span><span className="font-semibold text-warning">{s.pendingActions.paymentsToVerify}</span></div>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center py-2 text-sm"><span className="text-muted-foreground">Pending payments</span><span className="font-semibold">{s.pendingPayments}</span></div>
       </section>
 
       <section className="surface-panel mt-8 p-5">
@@ -244,6 +261,9 @@ function Page() {
           </ul>
         </section>
       </div>
+      <section className="mt-4 border-t border-border pt-3 sm:hidden"><div className="flex items-center justify-between"><h2 className="text-sm font-semibold">Recent customer activity</h2><Button asChild variant="ghost" size="sm"><Link to="/admin/customers">Customers<ArrowUpRight className="ml-1 size-3" /></Link></Button></div><ul className="divide-y divide-border">{s.recentOrders.slice(0, 3).map((o) => <li key={o.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 py-2.5"><div className="min-w-0"><p className="truncate text-xs font-medium">{o.customer_name}</p><p className="truncate text-[10px] text-muted-foreground">Order {o.order_number} · {o.status.replace(/_/g, " ")}</p></div><span className="text-[10px] text-muted-foreground">{shortDate(o.created_at)}</span></li>)}</ul>{s.recentOrders.length === 0 && <p className="py-2 text-xs text-muted-foreground">No customer orders yet.</p>}</section>
+      <details className="mt-4 sm:hidden"><summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold">Performance & revenue</summary><div className="grid grid-cols-2 gap-3 py-2"><div><p className="text-xs text-muted-foreground">Revenue · last 30 days</p><p className="font-semibold">{money(s.range.revenue)}</p></div><div><p className="text-xs text-muted-foreground">Average order</p><p className="font-semibold">{money(s.range.avgOrderValue)}</p></div></div><Button asChild variant="outline" className="h-11 w-full"><Link to="/admin/analytics">Analytics<ArrowUpRight className="ml-2 size-4" /></Link></Button></details>
+      <section id="notifications" className="mt-4 scroll-mt-20 sm:hidden"><AdminNotificationsBell /></section>
     </div>
   );
 }
