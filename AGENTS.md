@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Customer dashboard phone presentation uses the existing dashboard layout and overview with `sm`-scoped variants; hide the shared storefront header and collapse footer links only for signed-in non-staff dashboard visits below `sm` to avoid redundant height while preserving other pages and desktop.
+- Admin phone presentation stays in existing admin routes, with a grouped Sheet drawer and admin-scoped sub-sm CSS; drawer targets reuse existing tabs and section anchors to preserve desktop and all authorization paths.

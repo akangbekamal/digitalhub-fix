@@ -7,13 +7,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { myNotificationsQuery } from "@/lib/account";
 import { dateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /**
  * Staff notification list (new orders + customer support replies).
  * Reuses the existing `notifications` table and its realtime channel —
  * rows are only inserted for staff user ids, so nothing leaks to customers.
  */
-export function AdminNotificationsBell() {
+export function AdminNotificationsBell({ compact = false }: { compact?: boolean }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -48,41 +49,45 @@ export function AdminNotificationsBell() {
   };
 
   return (
-    <div className="relative mb-3">
-      <button
+    <div className={cn("relative", !compact && "mb-3")}>
+      <Button
+        variant="ghost"
         type="button"
+        aria-label="Admin notifications"
+        aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className={cn("relative flex items-center gap-2 rounded-xl text-sm font-medium text-muted-foreground", compact ? "size-11 p-0" : "w-full justify-start px-3 py-2")}
       >
         <Bell className="size-4" aria-hidden />
-        Notifications
+        {!compact && "Notifications"}
         {unread > 0 && (
-          <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+          <span className={cn("rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground", compact ? "absolute right-0 top-0 text-[10px]" : "ml-auto")}>
             {unread}
           </span>
         )}
-      </button>
+      </Button>
 
       {open && (
-        <div className="absolute z-30 mt-2 max-h-80 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border border-border bg-card p-2 shadow-lg">
+        <div className={cn("absolute z-30 mt-2 max-h-80 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border border-border bg-card p-2 shadow-elevate", compact && "right-0")}>
           {rows.length === 0 ? (
             <p className="p-3 text-sm text-muted-foreground">No notifications yet.</p>
           ) : (
             <ul className="space-y-1">
               {rows.map((n) => (
                 <li key={n.id}>
-                  <button
+                  <Button
+                    variant="ghost"
                     type="button"
                     onClick={() => void openNotification(n.id, n.link)}
                     className={cn(
-                      "w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted",
+                      "block h-auto w-full whitespace-normal rounded-lg px-3 py-3 text-left text-sm transition-colors hover:bg-muted",
                       !n.is_read && "bg-primary/5",
                     )}
                   >
                     <span className="block font-medium">{n.title}</span>
                     {n.body && <span className="block break-words text-xs text-muted-foreground">{n.body}</span>}
                     <span className="mt-1 block text-xs text-muted-foreground">{dateTime(n.created_at)}</span>
-                  </button>
+                  </Button>
                 </li>
               ))}
             </ul>

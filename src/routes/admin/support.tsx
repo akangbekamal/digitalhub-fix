@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,9 @@ const TICKET_STATUSES = ["open", "in_progress", "waiting_customer", "resolved", 
 const REFUND_STATUSES = ["requested", "approved", "processing", "completed", "rejected"] as const;
 
 function Page() {
+  const section = useRouterState({ select: (s) => s.location.hash });
+  const [tab, setTab] = useState("tickets");
+  useEffect(() => { if (["tickets", "reviews", "refunds"].includes(section)) setTab(section); }, [section]);
   const qc = useQueryClient();
   const tickets = useQuery(adminTicketsQuery());
   const reviews = useQuery(adminReviewsQuery());
@@ -67,7 +70,7 @@ function Page() {
       <h1 className="font-display text-3xl font-bold tracking-tight">Support & reviews</h1>
       <p className="mt-2 text-muted-foreground">Keep customers answered and the catalog trustworthy.</p>
 
-      <Tabs defaultValue="tickets" className="mt-6">
+      <Tabs value={tab} onValueChange={setTab} className="mt-6">
         <TabsList>
           <TabsTrigger value="tickets">Tickets</TabsTrigger>
           <TabsTrigger value="reviews">Reviews</TabsTrigger>
@@ -75,7 +78,7 @@ function Page() {
         </TabsList>
 
         <TabsContent value="tickets" className="mt-4 grid gap-4 lg:grid-cols-[280px_1fr]">
-          <div className="surface-panel p-2">
+          <div className="surface-panel max-h-48 overflow-y-auto p-2 sm:max-h-none">
             {tickets.isLoading ? (
               <div className="p-3">
                 <LoadingState rows={2} />
@@ -84,16 +87,16 @@ function Page() {
               <ul className="space-y-1">
                 {(tickets.data ?? []).map((t) => (
                   <li key={t.id}>
-                    <button
+                    <Button variant="ghost"
                       type="button"
                       onClick={() => setActiveId(t.id)}
-                      className={`w-full rounded-lg px-3 py-2 text-left text-sm ${activeId === t.id ? "bg-primary/15 text-primary" : "hover:bg-muted"}`}
+                      className={`block h-auto w-full whitespace-normal rounded-lg px-3 py-2 text-left text-sm ${activeId === t.id ? "bg-primary/15 text-primary" : "hover:bg-muted"}`}
                     >
                       <span className="line-clamp-1 font-medium">{t.subject}</span>
                       <span className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                         <StatusBadge status={t.status} /> {dateTime(t.updated_at)}
                       </span>
-                    </button>
+                    </Button>
                   </li>
                 ))}
               </ul>
@@ -123,7 +126,7 @@ function Page() {
                     Send
                   </Button>
                   <Select onValueChange={(v) => void send(v as (typeof TICKET_STATUSES)[number])}>
-                    <SelectTrigger className="w-48" aria-label="Set ticket status">
+                  <SelectTrigger className="w-full sm:w-48" aria-label="Set ticket status">
                       <SelectValue placeholder="Set status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -157,7 +160,7 @@ function Page() {
                     <p className="text-sm text-muted-foreground">{r.body}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{dateTime(r.created_at)}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge status={r.status} />
                     {(["approve", "reject", "remove"] as const).map((a) => (
                       <Button

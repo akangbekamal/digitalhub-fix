@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
@@ -93,6 +93,9 @@ export const Route = createFileRoute("/admin/orders")({
 
 function Page() {
   const qc = useQueryClient();
+  const section = useRouterState({ select: (s) => s.location.hash });
+  const [tab, setTab] = useState("verify");
+  useEffect(() => { if (section === "orders" || section === "verify") setTab(section); }, [section]);
 
   // --------------------------------------------------
   // STATE
@@ -580,7 +583,8 @@ const sendDeliveryEmail = async () => {
       </p>
 
       <Tabs
-        defaultValue="verify"
+        value={tab}
+        onValueChange={setTab}
         className="mt-6"
       >
         <TabsList>
@@ -622,7 +626,7 @@ const sendDeliveryEmail = async () => {
                   key={p.id}
                   className="surface-panel p-4"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 sm:flex sm:flex-wrap sm:justify-between sm:gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="font-display font-semibold">
                         {p.orders?.order_number}
@@ -662,7 +666,7 @@ const sendDeliveryEmail = async () => {
                     </div>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <div className="mt-3 grid grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap">
                     <Input
                       value={
                         notes[p.id] ?? ""
@@ -675,7 +679,7 @@ const sendDeliveryEmail = async () => {
                         }))
                       }
                       placeholder="Note for the customer (optional)"
-                      className="max-w-sm"
+                      className="col-span-2 max-w-sm"
                     />
 
                     {p.proof_path && (
@@ -785,13 +789,13 @@ const sendDeliveryEmail = async () => {
                   key={o.id}
                   className="surface-panel p-4"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-start sm:justify-between sm:gap-3">
                     <div className="min-w-0">
                       <p className="font-display font-semibold">
                         {o.order_number}
                       </p>
 
-                      <p className="text-sm text-muted-foreground">
+                      <p className="break-words text-xs text-muted-foreground sm:text-sm">
                         {o.customer_name} ·{" "}
                         {o.customer_phone} ·{" "}
                         {o.customer_email}
@@ -820,7 +824,7 @@ const sendDeliveryEmail = async () => {
                       </p>
                     </div>
 
-                    <div className="w-full items-stretch gap-2 sm:flex sm:w-auto sm:flex-col sm:items-end">
+                    <div className="grid w-full grid-cols-2 items-center gap-2 sm:flex sm:w-auto sm:flex-col sm:items-end">
                       <span className="font-display text-lg font-bold text-primary">
                         {money(o.total)}
                       </span>
@@ -840,9 +844,7 @@ const sendDeliveryEmail = async () => {
                           variant="outline"
                           onClick={() =>
                             void openProof(
-                              paymentByOrder.get(
-                                o.id,
-                              )!.id,
+                              paymentByOrder.get(o.id)?.id ?? "",
                             )
                           }
                         >
@@ -869,7 +871,7 @@ const sendDeliveryEmail = async () => {
                         }
                       >
                         <SelectTrigger
-                          className="mt-2 w-full sm:mt-0 sm:w-48"
+                          className="w-full sm:w-48"
                           aria-label="Order status"
                         >
                           <SelectValue />
@@ -898,7 +900,7 @@ const sendDeliveryEmail = async () => {
                       </Select>
 
                       <Button
-                        className="mt-2 w-full sm:mt-0 sm:w-auto"
+                        className="col-span-2 w-full sm:w-auto"
                         size="sm"
                         onClick={() => {
                           setDeliveryOrder(

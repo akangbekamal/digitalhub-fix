@@ -71,6 +71,7 @@ const defaultAdminNotify: AdminNotify = {
 };
 
 export const Route = createFileRoute("/admin/settings")({
+  head: () => ({ meta: [{ title: "Store Settings — DIGITAL HUB GH Admin" }, { name: "description", content: "Manage DigitalHubGH store, payment and admin notification settings." }, { property: "og:title", content: "Store Settings — DIGITAL HUB GH Admin" }, { property: "og:description", content: "Manage DigitalHubGH store, payment and admin notification settings." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: SettingsPage,
 });
 
@@ -215,7 +216,7 @@ function SettingsPage() {
   }
 
   return (
-    <div className="space-y-8 p-4 md:p-6">
+    <div className="space-y-4 p-0 sm:space-y-8 sm:p-4 md:p-6">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">
           Website Settings
@@ -238,7 +239,7 @@ function SettingsPage() {
         </div>
       )}
 
-      <section className="space-y-4 rounded-2xl border border-border bg-card p-4 md:p-6">
+      <section id="store-settings" className="scroll-mt-20 space-y-4 rounded-lg border border-border bg-card p-3 sm:rounded-2xl sm:p-4 md:p-6">
         <h2 className="text-lg font-semibold text-foreground">
           Contact Information
         </h2>
@@ -290,7 +291,7 @@ function SettingsPage() {
         </div>
       </section>
 
-      <section className="space-y-4 rounded-2xl border border-border bg-card p-4 md:p-6">
+      <section className="space-y-4 rounded-lg border border-border bg-card p-3 sm:rounded-2xl sm:p-4 md:p-6">
         <h2 className="text-lg font-semibold text-foreground">
           Social Media Links
         </h2>
@@ -353,7 +354,7 @@ function SettingsPage() {
         </div>
       </section>
 
-      <section className="space-y-4 rounded-2xl border border-border bg-card p-4 md:p-6">
+      <section id="payment-settings" className="scroll-mt-20 space-y-4 rounded-lg border border-border bg-card p-3 sm:rounded-2xl sm:p-4 md:p-6">
         <h2 className="text-lg font-semibold text-foreground">
           Checkout &amp; Payment Settings
         </h2>
@@ -439,7 +440,7 @@ function SettingsPage() {
 
 
 
-      <section className="space-y-4 rounded-2xl border border-border bg-card p-4 md:p-6">
+      <section id="email-notifications" className="scroll-mt-20 space-y-4 rounded-lg border border-border bg-card p-3 sm:rounded-2xl sm:p-4 md:p-6">
         <h2 className="text-lg font-semibold text-foreground">Admin Notifications</h2>
         <p className="text-sm text-muted-foreground">
           New order alerts for staff only. These settings are private and are never visible to customers.
@@ -541,7 +542,7 @@ function SettingsPage() {
         </label>
       </section>
 
-      <section className="space-y-4 rounded-2xl border border-border bg-card p-4 md:p-6">
+      <section id="security" className="scroll-mt-20 space-y-4 rounded-lg border border-border bg-card p-3 sm:rounded-2xl sm:p-4 md:p-6">
         <h2 className="text-lg font-semibold text-foreground">
           Maintenance Mode
         </h2>
@@ -578,8 +579,8 @@ function SettingsPage() {
         </div>
       </section>
 
-      <div className="flex justify-end">
-        <Button onClick={saveSettings} disabled={saving}>
+      <div className="sticky bottom-0 z-20 -mx-4 border-t border-border bg-background/95 px-4 py-3 sm:static sm:mx-0 sm:flex sm:justify-end sm:border-0 sm:bg-transparent sm:p-0">
+        <Button className="h-11 w-full sm:h-9 sm:w-auto" onClick={saveSettings} disabled={saving}>
           <Save className="mr-2 size-4" />
           {saving ? "Saving…" : "Save Settings"}
         </Button>

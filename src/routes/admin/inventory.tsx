@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { MobileDetails } from "@/components/admin/MobileDetails";
 import { ErrorState, LoadingState } from "@/components/StateBlocks";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -36,6 +37,10 @@ export const Route = createFileRoute("/admin/inventory")({
         name: "description",
         content: "Manage digital products and account inventory.",
       },
+      { property: "og:title", content: "Digital Inventory — DIGITAL HUB GH Admin" },
+      { property: "og:description", content: "Manage digital products and account inventory." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Page,
@@ -676,6 +681,7 @@ function Page() {
         </Button>
       </div>
 
+      <div className="mt-3 grid grid-cols-3 gap-2 sm:hidden">{(["available", "reserved", "sold"] as const).map((status) => <Button key={status} variant={statusFilter === status ? "default" : "outline"} className="h-auto min-h-14 flex-col gap-1 px-1 py-2" onClick={() => setStatusFilter(status)}><span className="text-[11px] capitalize">{status}</span><span className="font-display text-base font-bold">{inventory.filter((item) => status === "sold" ? item.status === "sold" || item.status === "delivered" : item.status === status).length}</span></Button>)}</div>
       <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_auto]">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -1451,7 +1457,7 @@ function Page() {
               </div>
             </Section>
 
-            <div className="grid gap-2 sm:flex sm:flex-wrap sm:justify-end">
+            <div className="sticky bottom-0 z-10 -mx-3 grid gap-2 border-t border-border bg-card px-3 py-3 sm:static sm:mx-0 sm:flex sm:flex-wrap sm:justify-end sm:border-0 sm:p-0">
               <Button
                 type="button"
                 variant="outline"
@@ -1531,7 +1537,7 @@ function Page() {
                     </p>
                   </div>
 
-                  <div className="grid gap-2 sm:flex">
+                  <div className="grid grid-cols-2 gap-2 sm:flex">
                     <Button
                       variant="outline"
                       size="sm"
@@ -1554,7 +1560,8 @@ function Page() {
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <MobileDetails label="Credentials, pricing & access">
+                <div className="mt-3 grid grid-cols-2 gap-3 sm:mt-5 sm:gap-4 lg:grid-cols-4">
                   <div>
                     <p className="text-xs font-medium text-muted-foreground">
                       Account Email
@@ -1579,7 +1586,7 @@ function Page() {
                         Password
                       </p>
 
-                      <button
+                      <Button variant="ghost" size="icon" aria-label={passwordVisible ? "Hide inventory password" : "Show inventory password"}
                         type="button"
                         onClick={() =>
                           setShowPasswords((current) => ({
@@ -1587,14 +1594,14 @@ function Page() {
                             [item.id]: !current[item.id],
                           }))
                         }
-                        className="text-muted-foreground hover:text-foreground"
+                        className="size-11 shrink-0 text-muted-foreground hover:text-foreground sm:size-6"
                       >
                         {passwordVisible ? (
                           <EyeOff className="size-4" />
                         ) : (
                           <Eye className="size-4" />
                         )}
-                      </button>
+                      </Button>
                     </div>
 
                     <p className="mt-1 break-all font-mono text-sm">
@@ -1719,6 +1726,7 @@ function Page() {
                     </p>
                   </div>
                 )}
+                </MobileDetails>
               </section>
             );
           })}
