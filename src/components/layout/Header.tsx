@@ -55,6 +55,7 @@ export function Header() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const customerDashboard = Boolean(user && !isStaff && (pathname === "/dashboard" || pathname.startsWith("/dashboard/")));
+  const adminDashboard = Boolean(user && isStaff && (pathname === "/admin" || pathname.startsWith("/admin/")));
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
 
@@ -65,7 +66,7 @@ export function Header() {
   };
 
   return (
-    <header className={`${customerDashboard ? "hidden sm:block " : ""}sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-xl`}>
+    <header className={`${customerDashboard || adminDashboard ? "hidden sm:block " : ""}sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-xl`}>
       <div className="container-page flex h-16 items-center gap-3">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
