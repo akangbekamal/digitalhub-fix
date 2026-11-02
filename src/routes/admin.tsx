@@ -142,7 +142,7 @@ function Layout() {
             <SheetContent side="left" className="admin-drawer flex w-[calc(100vw-2rem)] max-w-sm flex-col p-0 [&>button]:grid [&>button]:size-11 [&>button]:place-items-center [&>button]:right-1 [&>button]:top-1">
               <div className="border-b border-border p-4 pr-14"><SheetTitle className="flex items-center gap-2 text-base"><ShieldCheck className="size-5 text-primary" />DigitalHubGH Admin</SheetTitle><SheetDescription className="mt-1 truncate text-xs">{profile?.full_name || "Administrator"}</SheetDescription></div>
               <nav aria-label="Admin mobile navigation" className="min-h-0 flex-1 overflow-y-auto px-3 pb-4">
-                {GROUPS.map((group) => <div key={group.label} className="mt-4"><p className="mb-1 px-3 text-[10px] font-semibold uppercase text-muted-foreground">{group.label}</p>{group.items.map((item) => { const itemHash = "hash" in item ? item.hash : undefined; return <Link key={item.label} to={item.to} hash={itemHash} onClick={() => setMenuOpen(false)} className={cn("flex min-h-11 items-center gap-3 rounded-md px-3 text-sm", pathname === item.to && hash === (itemHash ?? "") ? "bg-primary/10 font-semibold text-primary" : "text-foreground hover:bg-muted")}><item.icon className="size-4 shrink-0 text-muted-foreground" />{item.label}</Link>; })}</div>)}
+                {GROUPS.map((group) => <div key={group.label} className="mt-4"><p className="mb-1 px-3 text-[10px] font-semibold uppercase text-muted-foreground">{group.label}</p>{group.items.map((item) => { const itemHash = "hash" in item ? item.hash : undefined; return <Link key={item.label} to={item.to} hash={itemHash ?? ""} onClick={() => setMenuOpen(false)} className={cn("flex min-h-11 items-center gap-3 rounded-md px-3 text-sm", pathname === item.to && hash === (itemHash ?? "") ? "bg-primary/10 font-semibold text-primary" : "text-foreground hover:bg-muted")}><item.icon className="size-4 shrink-0 text-muted-foreground" />{item.label}</Link>; })}</div>)}
               </nav>
               <div className="border-t border-border p-3"><Button variant="ghost" className="h-11 w-full justify-start" onClick={() => void signOut()}><LogOut className="mr-2 size-4" />Sign out</Button></div>
             </SheetContent>
@@ -151,7 +151,7 @@ function Layout() {
       </header>
       <div className="grid gap-8 lg:grid-cols-[230px_1fr]">
         <nav aria-label="Admin" className="hidden sm:block lg:sticky lg:top-24 lg:h-fit">
-          <AdminNotificationsBell />
+          <AdminNotificationsBell realtime={false} />
           <ul className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-2 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
             {NAV.map((item) => {
               const active = item.to === "/admin" ? pathname === item.to : pathname.startsWith(item.to);

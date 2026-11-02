@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
 import { toast } from "sonner";
@@ -14,16 +14,17 @@ import { Button } from "@/components/ui/button";
  * Reuses the existing `notifications` table and its realtime channel —
  * rows are only inserted for staff user ids, so nothing leaks to customers.
  */
-export function AdminNotificationsBell({ compact = false }: { compact?: boolean }) {
+export function AdminNotificationsBell({ compact = false, realtime = true }: { compact?: boolean; realtime?: boolean }) {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const instanceId = useId();
   const [open, setOpen] = useState(false);
   const query = useQuery(myNotificationsQuery(user?.id));
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !realtime) return;
     const channel = supabase
-      .channel(`admin-notifications-${user.id}`)
+      .channel(`admin-notifications-${user.id}-${instanceId}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
@@ -37,7 +38,7 @@ export function AdminNotificationsBell({ compact = false }: { compact?: boolean 
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [user, qc]);
+  }, [user?.id, qc, instanceId, realtime]);
 
   const rows = (query.data ?? []).slice(0, 15);
   const unread = rows.filter((n) => !n.is_read).length;
