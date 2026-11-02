@@ -151,7 +151,7 @@ function Layout() {
       </header>
       <div className="grid gap-8 lg:grid-cols-[230px_1fr]">
         <nav aria-label="Admin" className="hidden sm:block lg:sticky lg:top-24 lg:h-fit">
-          <AdminNotificationsBell />
+          <AdminNotificationsBell realtime={false} />
           <ul className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-2 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
             {NAV.map((item) => {
               const active = item.to === "/admin" ? pathname === item.to : pathname.startsWith(item.to);

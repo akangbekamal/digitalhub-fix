@@ -10,6 +10,7 @@
 - [x] Verify 320, 375, 390, 414 and 430px plus desktop with isolated browser layout fixtures: no overflow, menu works, Orders quick action opens the order list, no page errors. Live customer-session testing unavailable; no authentication or backend changes made.
 
 ## Professional mobile admin
-- [ ] Compact sticky admin header and grouped drawer linking every existing section.
-- [ ] Compact overview metrics, actions and operational lists; phone-safe tables and forms.
-- [ ] Verify five phone widths, navigation, representative controls, desktop and unchanged access gates.
+- [x] Compact sticky admin header and grouped drawer linking every existing section; reuse existing tabs/settings rather than add capabilities.
+- [x] Compact overview metrics, actions and operational lists; phone-safe tables and forms.
+- [x] Verify loaded screens at 320/375/390/414/430 with isolated fixtures, grouped drawer/categories navigation, delivery dialog, inventory details, support reply field, Message Center history, desktop and customer UI gate; build clean.
+- [ ] Live signed-in admin transactions remain unverified: external backend session unavailable. No production data or security changes made.

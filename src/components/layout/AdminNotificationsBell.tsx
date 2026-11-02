@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
  * Reuses the existing `notifications` table and its realtime channel —
  * rows are only inserted for staff user ids, so nothing leaks to customers.
  */
-export function AdminNotificationsBell({ compact = false }: { compact?: boolean }) {
+export function AdminNotificationsBell({ compact = false, realtime = true }: { compact?: boolean; realtime?: boolean }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const instanceId = useId();
@@ -22,7 +22,7 @@ export function AdminNotificationsBell({ compact = false }: { compact?: boolean 
   const query = useQuery(myNotificationsQuery(user?.id));
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !realtime) return;
     const channel = supabase
       .channel(`admin-notifications-${user.id}-${instanceId}`)
       .on(
@@ -38,7 +38,7 @@ export function AdminNotificationsBell({ compact = false }: { compact?: boolean 
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [user?.id, qc, instanceId]);
+  }, [user?.id, qc, instanceId, realtime]);
 
   const rows = (query.data ?? []).slice(0, 15);
   const unread = rows.filter((n) => !n.is_read).length;
