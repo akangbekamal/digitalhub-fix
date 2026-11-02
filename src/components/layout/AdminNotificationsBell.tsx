@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
 import { toast } from "sonner";
@@ -17,13 +17,14 @@ import { Button } from "@/components/ui/button";
 export function AdminNotificationsBell({ compact = false }: { compact?: boolean }) {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const instanceId = useId();
   const [open, setOpen] = useState(false);
   const query = useQuery(myNotificationsQuery(user?.id));
 
   useEffect(() => {
     if (!user) return;
     const channel = supabase
-      .channel(`admin-notifications-${user.id}`)
+      .channel(`admin-notifications-${user.id}-${instanceId}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
@@ -37,7 +38,7 @@ export function AdminNotificationsBell({ compact = false }: { compact?: boolean 
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [user, qc]);
+  }, [user?.id, qc, instanceId]);
 
   const rows = (query.data ?? []).slice(0, 15);
   const unread = rows.filter((n) => !n.is_read).length;
