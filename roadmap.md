@@ -14,3 +14,10 @@
 - [x] Compact overview metrics, actions and operational lists; phone-safe tables and forms.
 - [x] Verify loaded screens at 320/375/390/414/430 with isolated fixtures, grouped drawer/categories navigation, delivery dialog, inventory details, support reply field, Message Center history, desktop and customer UI gate; build clean.
 - [ ] Live signed-in admin transactions remain unverified: external backend session unavailable. No production data or security changes made.
+
+## Integrated wallet and deposit approval
+- [ ] Phase 1: inspect live schema and security; prepare additive schema/functions and verify authorization, atomicity and constraints. Blocked: database management inspection returned HTTP 401; built-in schema tool cannot access external project.
+- [ ] Phase 2: verified wallet creation, deposits, ledger, atomic checkout, adjustments and refunds. Depends on Phase 1.
+- [ ] Phase 3: existing Brevo emails, hashed expiring decision tokens, authenticated GET-safe confirmation, private admin proof viewer, decision history and notifications; verify exactly-once credit. Depends on Phase 2.
+- [ ] Phase 4: integrate customer Wallet, existing checkout, admin wallet management and settings without redesign. Depends on Phase 3.
+- [ ] Phase 5: real authorized flow, concurrency/security/regression tests and detailed implementation report. No fabricated approvals or transactions.
