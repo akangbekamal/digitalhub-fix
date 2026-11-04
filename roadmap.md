@@ -17,7 +17,7 @@
 
 ## Integrated wallet and deposit approval
 - [x] Phase 1 inspection: restored secure management access; inspected all 38 public tables, functions, policies, constraints, indexes, roles and buckets read-only. No equivalent wallet tables exist; payment-proofs is private.
-- [ ] Phase 1 implementation: additive schema/functions and verification of authorization, atomicity and constraints. Awaiting approval of the financial implementation plan before database changes.
+- [ ] Phase 1 implementation: plan approved; live defaults/grants and registration trigger inspected. Blocked: migration system refuses schema files because the existing external database is not linked to Lovable; connect the existing project under Settings → General → External Supabase. No wallet schema or database changes applied; do not bypass the migration system through management queries.
 - [ ] Phase 2: verified wallet creation, deposits, ledger, atomic checkout, adjustments and refunds. Depends on Phase 1.
 - [ ] Phase 3: existing Brevo emails, hashed expiring decision tokens, authenticated GET-safe confirmation, private admin proof viewer, decision history and notifications; verify exactly-once credit. Depends on Phase 2.
 - [ ] Phase 4: integrate customer Wallet, existing checkout, admin wallet management and settings without redesign. Depends on Phase 3.
