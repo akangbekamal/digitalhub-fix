@@ -1836,11 +1836,294 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_deposit_tokens: {
+        Row: {
+          created_at: string
+          deposit_id: string
+          expires_at: string
+          id: string
+          token_hash: string
+          used_action: string | null
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          deposit_id: string
+          expires_at: string
+          id?: string
+          token_hash: string
+          used_action?: string | null
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          deposit_id?: string
+          expires_at?: string
+          id?: string
+          token_hash?: string
+          used_action?: string | null
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_deposit_tokens_deposit_id_fkey"
+            columns: ["deposit_id"]
+            isOneToOne: false
+            referencedRelation: "wallet_deposits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallet_deposits: {
+        Row: {
+          admin_note: string | null
+          amount: number
+          created_at: string
+          credited_transaction_id: string | null
+          customer_note: string | null
+          decision_source: string | null
+          expires_at: string
+          id: string
+          method: string
+          proof_path: string | null
+          reference: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sender_name: string | null
+          sender_number: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount: number
+          created_at?: string
+          credited_transaction_id?: string | null
+          customer_note?: string | null
+          decision_source?: string | null
+          expires_at?: string
+          id?: string
+          method?: string
+          proof_path?: string | null
+          reference: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sender_name?: string | null
+          sender_number?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount?: number
+          created_at?: string
+          credited_transaction_id?: string | null
+          customer_note?: string | null
+          decision_source?: string | null
+          expires_at?: string
+          id?: string
+          method?: string
+          proof_path?: string | null
+          reference?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sender_name?: string | null
+          sender_number?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_deposits_credited_transaction_id_fkey"
+            columns: ["credited_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "wallet_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_deposits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          direction: string
+          id: string
+          idempotency_key: string
+          reference_id: string | null
+          reference_type: string | null
+          type: string
+          user_id: string
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          direction: string
+          id?: string
+          idempotency_key: string
+          reference_id?: string | null
+          reference_type?: string | null
+          type: string
+          user_id: string
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          balance_before?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          direction?: string
+          id?: string
+          idempotency_key?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          type?: string
+          user_id?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          currency: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_adjust_wallet: {
+        Args: {
+          _amount: number
+          _direction: string
+          _reason: string
+          _request_key: string
+          _user: string
+        }
+        Returns: string
+      }
+      admin_decide_wallet_deposit: {
+        Args: {
+          _decision: string
+          _deposit_id: string
+          _note: string
+          _source?: string
+        }
+        Returns: string
+      }
+      admin_refund_order_to_wallet: {
+        Args: {
+          _amount: number
+          _order_id: string
+          _reason: string
+          _request_key: string
+        }
+        Returns: string
+      }
+      admin_set_wallet_status: {
+        Args: { _status: string; _user: string }
+        Returns: boolean
+      }
+      cancel_my_wallet_deposit: {
+        Args: { _deposit_id: string }
+        Returns: boolean
+      }
+      create_wallet_deposit: {
+        Args: {
+          _amount: number
+          _method: string
+          _note: string
+          _proof_path: string
+          _reference: string
+          _sender_name: string
+          _sender_number: string
+        }
+        Returns: string
+      }
+      ensure_my_wallet: {
+        Args: never
+        Returns: {
+          balance: number
+          created_at: string
+          currency: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wallets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      expire_wallet_deposits: { Args: never; Returns: number }
       get_my_digital_deliveries: {
         Args: never
         Returns: {
@@ -1883,6 +2166,7 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      pay_order_with_wallet: { Args: { _order_id: string }; Returns: string }
       release_digital_inventory: {
         Args: { p_order_id: string }
         Returns: number
@@ -1891,11 +2175,35 @@ export type Database = {
         Args: { p_inventory_id: string; p_order_id: string }
         Returns: boolean
       }
+      resubmit_my_wallet_deposit: {
+        Args: {
+          _deposit_id: string
+          _note: string
+          _proof_path: string
+          _reference: string
+        }
+        Returns: boolean
+      }
       track_announcement_event: {
         Args: { _announcement_id: string; _event: string }
         Returns: undefined
       }
       update_expired_inventory_warranties: { Args: never; Returns: number }
+      wallet_apply: {
+        Args: {
+          _actor: string
+          _amount: number
+          _desc: string
+          _direction: string
+          _idem: string
+          _ref_id: string
+          _ref_type: string
+          _type: string
+          _user: string
+        }
+        Returns: string
+      }
+      wallet_setting: { Args: { _k: string }; Returns: Json }
     }
     Enums: {
       app_role:
